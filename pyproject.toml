@@ -19,6 +19,7 @@ tb-license-compat = "terrabit_pre_commit_hooks.check_license_compat:main"
 tb-check-module-icon = "terrabit_pre_commit_hooks.check_module_icon:cli"
 tb-update-pyproject-name = "terrabit_pre_commit_hooks.update_pyproject_name:main"
 tb-check-po-vs-pot = "terrabit_pre_commit_hooks.check_po_vs_pot:cli"
+tb-apps-preview = "terrabit_pre_commit_hooks.tb_apps_preview:main"
 
 [tool.setuptools]
 packages = ["terrabit_pre_commit_hooks"]

@@ -16,6 +16,15 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `tb-fisa-badge` | badge „Fișă consultant” în `README.rst` | manual |
 | `tb-test-stats` | scrie `scripts/test_stats.json` (teste + acoperire Codecov) | manual |
 
+## Unelte (nu hook-uri)
+
+- `tb_apps_preview.py` — emulează sanitizer-ul Odoo Apps Store pe un `index.html` și scrie alături
+  `index.apps-light.html` / `index.apps-dark.html` pentru QA vizual (`--report` = doar riscurile pe dark):
+
+  ```bash
+  python3 ../terrabit-pre-commit-hooks/terrabit_pre_commit_hooks/tb_apps_preview.py <modul>/static/description/index.html
+  ```
+
 ## Folosire într-o suită
 
 ```yaml

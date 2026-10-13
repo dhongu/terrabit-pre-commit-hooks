@@ -54,7 +54,7 @@ impune propriul `background-color:#ffffff` + reset de variabile Bootstrap (THEME
 în backendul Odoo aceeași descriere e randată în tema curentă, iar pe tema dark fundalul
 moștenit e închis — fără fundal propriu, textul închis devine invizibil.
 Verdele Terrabit DOAR ca `background-color`/bordură, niciodată singura sursă de
-lizibilitate. Validare: scripts/tb_apps_preview.py (light + dark-sane).
+lizibilitate. Validare: tb_apps_preview.py din același repo (light + dark-sane).
 
 Ieșirea e un FRAGMENT de body (fără <html>/<head>) — store-ul oricum despachetează,
 iar tb_apps_preview.py îl îmbracă în shell-ul lui.
