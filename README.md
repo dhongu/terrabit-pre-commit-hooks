@@ -11,6 +11,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `license-compat` | licența modulului e compatibilă cu a dependențelor (Odoo Apps) | la commit, pe `__manifest__.py` |
 | `update-pyproject-name` | `[project].name` din `pyproject.toml` = `odoo-addon-<modul>` | la commit, pe `pyproject.toml` |
 | `check-module-icon` | modulul are `static/description/icon.png`, nu o iconiță generică | la commit, pe `__manifest__.py` |
+| `check-po-vs-pot` | traducerile noi din `.po` există în `.pot` (altfel Odoo le ignoră în tăcere) | la commit, pe `i18n/*.po` |
 | `tb-gen-index` | generează `static/description/index.html` (Apps Store) din `readme/*.md` | manual |
 | `tb-fisa-badge` | badge „Fișă consultant” în `README.rst` | manual |
 | `tb-test-stats` | scrie `scripts/test_stats.json` (teste + acoperire Codecov) | manual |
@@ -19,11 +20,12 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 
 ```yaml
 - repo: https://github.com/dhongu/terrabit-pre-commit-hooks
-  rev: v1.0.0
+  rev: v1.1.0
   hooks:
     - id: license-compat
     - id: update-pyproject-name
     - id: check-module-icon
+    - id: check-po-vs-pot
     - id: tb-gen-index
       args: [--lang, ro, --scope-note]   # doar unde e nevoie
     - id: tb-fisa-badge
@@ -41,6 +43,12 @@ pre-commit run tb-fisa-badge --hook-stage manual
 `tb-gen-index` caută suitele-frate în directorul părinte al suitei (cardurile „More apps”,
 dependențele plătite), deci rezultatul complet se obține local, cu toate suitele clonate
 una lângă alta.
+
+## Teste
+
+```bash
+python3 -m unittest discover -s tests
+```
 
 ## Modificări
 

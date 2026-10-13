@@ -19,6 +19,11 @@
   language: python
   files: '__manifest__\.py$'
   verbose: true
+- id: check-po-vs-pot
+  name: Traducerile din .po trebuie sa existe in .pot (altfel Odoo le ignora)
+  entry: tb-check-po-vs-pot
+  language: python
+  files: '[a-zA-Z0-9_]*/i18n/[a-zA-Z_]*\.po$'
 - id: tb-gen-index
   name: Terrabit index.html generator (Apps Store)
   entry: tb-gen-index --addons-dir=.
