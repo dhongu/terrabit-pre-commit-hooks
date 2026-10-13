@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terrabit-pre-commit-hooks"
+version = "1.0.0"
+description = "Hook-urile pre-commit comune ale suitelor de module Odoo Terrabit"
+readme = "README.md"
+license = { text = "AGPL-3.0-only" }
+requires-python = ">=3.10"
+dependencies = ["markdown", "tomli", "tomli-w"]
+
+[project.scripts]
+tb-gen-index = "terrabit_pre_commit_hooks.tb_gen_index:main"
+tb-test-stats = "terrabit_pre_commit_hooks.tb_test_stats:main"
+tb-fisa-badge = "terrabit_pre_commit_hooks.tb_fisa_badge:main"
+tb-license-compat = "terrabit_pre_commit_hooks.check_license_compat:main"
+tb-check-module-icon = "terrabit_pre_commit_hooks.check_module_icon:cli"
+tb-update-pyproject-name = "terrabit_pre_commit_hooks.update_pyproject_name:main"
+
+[tool.setuptools]
+packages = ["terrabit_pre_commit_hooks"]

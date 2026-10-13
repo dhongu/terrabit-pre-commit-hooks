@@ -1,0 +1,42 @@
+# Hook-urile comune ale suitelor Terrabit. Id-urile sunt cele folosite înainte în
+# `repo: local`, deci `pre-commit run <id>` rămâne la fel. Opțiunile proprii unei suite
+# (ex. `--lang ro --scope-note` la l10n_ro_ent) se pun în `args:` din config-ul suitei.
+- id: license-compat
+  name: Licența modulului e compatibilă cu dependențele (Odoo Apps)
+  entry: tb-license-compat --addons-dir=.
+  language: python
+  files: '__manifest__\.py$'
+  pass_filenames: false
+- id: update-pyproject-name
+  name: Update pyproject.toml project name
+  entry: tb-update-pyproject-name
+  language: python
+  files: 'pyproject\.toml$'
+  pass_filenames: false
+- id: check-module-icon
+  name: Modulul are iconița lui (static/description/icon.png)
+  entry: tb-check-module-icon
+  language: python
+  files: '__manifest__\.py$'
+  verbose: true
+- id: tb-gen-index
+  name: Terrabit index.html generator (Apps Store)
+  entry: tb-gen-index --addons-dir=.
+  language: python
+  stages: [manual]
+  pass_filenames: false
+  always_run: true
+- id: tb-fisa-badge
+  name: Badge „Fișă consultant” în README.rst
+  entry: tb-fisa-badge --addons-dir=.
+  language: python
+  stages: [manual]
+  pass_filenames: false
+  always_run: true
+- id: tb-test-stats
+  name: Statistici teste și acoperire (scripts/test_stats.json)
+  entry: tb-test-stats
+  language: python
+  stages: [manual]
+  pass_filenames: false
+  always_run: true
