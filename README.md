@@ -15,6 +15,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `tb-gen-index` | generează `static/description/index.html` (Apps Store) din `readme/*.md` | manual |
 | `tb-fisa-badge` | badge „Fișă consultant” în `README.rst` | manual |
 | `tb-test-stats` | scrie `scripts/test_stats.json` (teste + acoperire Codecov) | manual |
+| `tb-test-badge` | badge „N automated tests · X% code coverage” în `README.rst`, din `scripts/test_stats.json` | manual |
 
 ## Unelte (nu hook-uri)
 
@@ -29,7 +30,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 
 ```yaml
 - repo: https://github.com/dhongu/terrabit-pre-commit-hooks
-  rev: v1.1.0
+  rev: v1.2.0
   hooks:
     - id: license-compat
     - id: update-pyproject-name
@@ -39,6 +40,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
       args: [--lang, ro, --scope-note]   # doar unde e nevoie
     - id: tb-fisa-badge
     - id: tb-test-stats
+    - id: tb-test-badge
 ```
 
 Hook-urile manuale:
@@ -47,6 +49,7 @@ Hook-urile manuale:
 pre-commit run tb-test-stats --hook-stage manual
 pre-commit run tb-gen-index --hook-stage manual
 pre-commit run tb-fisa-badge --hook-stage manual
+pre-commit run tb-test-badge --hook-stage manual   # după tb-test-stats
 ```
 
 `tb-gen-index` caută suitele-frate în directorul părinte al suitei (cardurile „More apps”,

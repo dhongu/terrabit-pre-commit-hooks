@@ -38,6 +38,13 @@
   stages: [manual]
   pass_filenames: false
   always_run: true
+- id: tb-test-badge
+  name: Badge „N automated tests · X% code coverage” în README.rst
+  entry: tb-test-badge --addons-dir=.
+  language: python
+  stages: [manual]
+  pass_filenames: false
+  always_run: true
 - id: tb-test-stats
   name: Statistici teste și acoperire (scripts/test_stats.json)
   entry: tb-test-stats
