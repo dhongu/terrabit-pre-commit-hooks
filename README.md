@@ -12,6 +12,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `update-pyproject-name` | `[project].name` din `pyproject.toml` = `odoo-addon-<modul>` | la commit, pe `pyproject.toml` |
 | `check-module-icon` | modulul are `static/description/icon.png`, nu o iconiță generică | la commit, pe `__manifest__.py` |
 | `check-po-vs-pot` | traducerile noi din `.po` există în `.pot` (altfel Odoo le ignoră în tăcere) | la commit, pe `i18n/*.po` |
+| `check-xpath-position` | avertizează la xpath-urile care aleg nodul doar după poziție (`td[2]`, `th[last()]`) | la commit, pe `*.xml` |
 | `tb-gen-index` | generează `static/description/index.html` (Apps Store) din `readme/*.md` | manual |
 | `tb-fisa-badge` | badge „Fișă consultant” în `README.rst` | manual |
 | `tb-test-stats` | scrie `scripts/test_stats.json` (teste + acoperire Codecov) | manual |
@@ -30,12 +31,13 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 
 ```yaml
 - repo: https://github.com/dhongu/terrabit-pre-commit-hooks
-  rev: v1.2.0
+  rev: v1.3.0
   hooks:
     - id: license-compat
     - id: update-pyproject-name
     - id: check-module-icon
     - id: check-po-vs-pot
+    - id: check-xpath-position
     - id: tb-gen-index
       args: [--lang, ro, --scope-note]   # doar unde e nevoie
     - id: tb-fisa-badge
@@ -55,6 +57,28 @@ pre-commit run tb-test-badge --hook-stage manual   # după tb-test-stats
 `tb-gen-index` caută suitele-frate în directorul părinte al suitei (cardurile „More apps”,
 dependențele plătite), deci rezultatul complet se obține local, cu toate suitele clonate
 una lângă alta.
+
+## `check-xpath-position`
+
+Un pas ca `td[2]`, `group[1]`, `th[last()]`, `td[last()-1]` sau `*[position() > 1]` se strică
+în tăcere când alt modul (cu id de vedere mai mic) inserează un element înainte: vederea e
+dezactivată la update sau, mai rău, modificarea ajunge pe alt nod. Caz real: la PTC, pe
+14.10.2026, `deltatech_sale_cancel_order.portal_my_orders_cancel`
+(`//t[@t-foreach='orders']/tr/td[2]/span[1]`) a căzut după ce `deltatech_delivery_relay` a
+inserat celula AWB.
+
+Nu se semnalează indexul pus după un filtru (`span[@t-field='order.date_order'][1]`,
+`field[@name='x'][2]`), pașii fără index (`/tr/td` cu `position="after"`) și indexul din
+interiorul unui predicat sau string (`div[span[2]]`, `[@t-if="x[0]"]`).
+
+Hook-ul e un avertisment (iese cu 0, mesajele apar prin `verbose: true`); cu `args: [--strict]`
+blochează commit-ul. Când poziția chiar e intenția, comentariul de pe linia dinainte suprimă
+avertismentul:
+
+```xml
+<!-- xpath-position: ok -->
+<xpath expr="//tr/td[last()]" position="after">
+```
 
 ## Teste
 

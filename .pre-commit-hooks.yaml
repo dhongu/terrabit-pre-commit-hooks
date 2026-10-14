@@ -24,6 +24,12 @@
   entry: tb-check-po-vs-pot
   language: python
   files: '[a-zA-Z0-9_]*/i18n/[a-zA-Z_]*\.po$'
+- id: check-xpath-position
+  name: Xpath-uri care aleg nodul doar după poziție (td[2], th[last()]) - avertisment
+  entry: tb-check-xpath-position
+  language: python
+  files: '\.xml$'
+  verbose: true
 - id: tb-gen-index
   name: Terrabit index.html generator (Apps Store)
   entry: tb-gen-index --addons-dir=.
