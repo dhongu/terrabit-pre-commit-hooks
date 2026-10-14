@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """Semnaleaza xpath-urile din vederile mostenite care aleg nodul DOAR dupa pozitie.
 
-Un pas ca `td[2]`, `group[1]`, `th[last()]`, `td[last()-1]` sau
-`*[position() > 1]` depinde de cate elemente au inserat inainte celelalte
+Un pas ca `td[2]`, `group[1]`, `td[last()-1]` sau `*[position() > 1]` depinde de cate elemente au inserat inainte celelalte
 module instalate. Cand un modul cu id de vedere mai mic adauga o celula, un
 grup sau un camp inaintea nodului vizat, xpath-ul nu mai gaseste nodul (Odoo
 dezactiveaza vederea la update) sau, mai rau, gaseste ALT nod si modificarea
@@ -14,6 +13,8 @@ insereaza o celula AWB dupa prima celula, deci `td[2]` nu mai era data comenzii,
 iar vederea a fost dezactivata la update.
 
 Ce NU se semnaleaza:
+  - `[last()]` simplu: un element inserat inainte nu il muta, iar unul adaugat
+    la final il muta odata cu intentia (after/before/inside "la final");
   - indexul pus dupa un filtru pe atribut: `span[@t-field='order.date_order'][1]`,
     `field[@name='x'][2]` - pozitia se numara doar intre nodurile filtrate;
   - pasii fara index (`/tr/td` cu position="after"), idiomul standard;
@@ -23,7 +24,7 @@ Ce NU se semnaleaza:
 Exceptie explicita, cand pozitia chiar este intentia:
 
     <!-- xpath-position: ok -->
-    <xpath expr="//tr/td[last()]" position="after">
+    <xpath expr="//tr/td[1]" position="after">
 
 Hook-ul este un avertisment: iese cu 0, iar mesajele se vad prin `verbose: true`.
 Cu `--strict` iese cu 1 daca a gasit ceva.
@@ -42,8 +43,8 @@ RE_XPATH = re.compile(r"""<xpath\b((?:\s+[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s
 RE_EXPR = re.compile(r"""(?:^|\s)expr\s*=\s*(?:"([^"]*)"|'([^']*)')""")
 RE_COMENTARIU = re.compile(r"<!--.*?-->", re.DOTALL)
 RE_EXCEPTIE = re.compile(r"<!--\s*xpath-position\s*:\s*ok\s*-->")
-# Predicat pozitional: [2], [last()], [last()-1], sau orice foloseste position().
-RE_POZITIONAL = re.compile(r"^\s*(?:\d+|last\(\s*\)(?:\s*-\s*\d+)?)\s*$|\bposition\(\s*\)")
+# Predicat pozitional: [2], [last()-1], sau orice foloseste position(). `[last()]` simplu nu.
+RE_POZITIONAL = re.compile(r"^\s*(?:\d+|last\(\s*\)\s*-\s*\d+)\s*$|\bposition\(\s*\)")
 
 SFAT = "un alt modul care inserează un element înainte îl deplasează; ancorează pe @name/@id/@t-field/hasclass(...)"
 

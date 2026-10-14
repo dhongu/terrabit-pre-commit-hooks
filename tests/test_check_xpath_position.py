@@ -61,10 +61,12 @@ class TestCheckXpathPosition(unittest.TestCase):
         self.assertIn("pozițional td[2]", linii[0])
         self.assertIn("pozițional span[1]", linii[1])
 
-    def test_last(self):
-        linii = self.semnalate("""        <xpath expr="//thead//tr[hasclass('active')]/th[last()]" position="after"/>""")
-        self.assertEqual(len(linii), 1)
-        self.assertIn("pozițional th[last()]", linii[0])
+    def test_last_nesemnalat(self):
+        """`[last()]` simplu rămâne „la final” și când alt modul inserează înainte."""
+        self.assertEqual(
+            self.semnalate("""        <xpath expr="//thead//tr[hasclass('active')]/th[last()]" position="after"/>"""),
+            [],
+        )
 
     def test_last_minus(self):
         linii = self.semnalate("""        <xpath expr="//tr/td[last() - 1]" position="before"/>""")
@@ -105,7 +107,7 @@ class TestCheckXpathPosition(unittest.TestCase):
         self.assertEqual(
             self.semnalate(
                 """        <!-- xpath-position: ok -->
-        <xpath expr="//tr/td[last()]" position="after"/>"""
+        <xpath expr="//tr/td[2]" position="after"/>"""
             ),
             [],
         )
