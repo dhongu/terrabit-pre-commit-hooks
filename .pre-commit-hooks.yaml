@@ -30,6 +30,12 @@
   language: python
   files: '\.xml$'
   verbose: true
+- id: tb-odoo-lint
+  name: API Odoo 19/20 eliminate sau redenumite (doar fișierele încărcate de modul)
+  entry: tb-odoo-lint
+  language: python
+  files: '(\.py|\.xml|\.csv|static/description/index\.html)$'
+  verbose: true
 - id: tb-gen-index
   name: Terrabit index.html generator (Apps Store)
   entry: tb-gen-index --addons-dir=.

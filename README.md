@@ -13,10 +13,29 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `check-module-icon` | modulul are `static/description/icon.png`, nu o iconiță generică | la commit, pe `__manifest__.py` |
 | `check-po-vs-pot` | traducerile noi din `.po` există în `.pot` (altfel Odoo le ignoră în tăcere) | la commit, pe `i18n/*.po` |
 | `check-xpath-position` | avertizează la xpath-urile care aleg nodul doar după poziție (`td[2]`, `td[last()-1]`) | la commit, pe `*.xml` |
+| `tb-odoo-lint` | API-uri Odoo 19/20 eliminate sau redenumite (`<tree>`, `attrs=`, `<group expand>` în search, `uom_po_id`, `_sql_constraints`, `get_param` pe 20 etc.), doar în fișierele pe care modulul le încarcă | la commit, pe `*.py`/`*.xml`/`*.csv` |
 | `tb-gen-index` | generează `static/description/index.html` (Apps Store) din `readme/*.md` | manual |
 | `tb-fisa-badge` | badge „Fișă consultant” în `README.rst` | manual |
 | `tb-test-stats` | scrie `scripts/test_stats.json` (teste + acoperire Codecov) | manual |
 | `tb-test-badge` | badge „N automated tests · X% code coverage” în `README.rst`, din `scripts/test_stats.json` | manual |
+
+## tb-odoo-lint
+
+Verifică doar ce încarcă Odoo: XML/CSV din `data`/`demo` ale manifestului, Python urmărit prin
+importurile active de la `__init__.py` (un import comentat scoate fișierul), testele (cu severitatea
+coborâtă la avertisment) și `static/description/index.html`. `migrations/` nu se verifică. Versiunea
+Odoo vine din `version` din manifest. Python-ul se analizează pe AST și XML-ul pe arbore, deci
+comentariile și docstring-urile nu dau alarme.
+
+```bash
+tb-odoo-lint --addons-dir odoo-addons/deltatech              # audit pe o suită
+tb-odoo-lint --show-unloaded <fișiere>                       # arată și fișierele neîncărcate
+python3 ../terrabit-pre-commit-hooks/terrabit_pre_commit_hooks/tb_odoo_lint.py --json --addons-dir .
+```
+
+Excepție pe linie sau pe linia de deasupra: `# tb-lint: disable=O19-PY-01 motiv`
+(`<!-- tb-lint: disable=O19-XML-03 -->` în XML), pentru tot fișierul `tb-lint: disable-file=...`.
+Iese cu 1 la o constatare `block`; `--warn-only` iese mereu cu 0.
 
 ## Unelte (nu hook-uri)
 
