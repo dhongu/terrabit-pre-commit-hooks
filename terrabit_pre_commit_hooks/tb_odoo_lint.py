@@ -177,6 +177,12 @@ REGULI = {
         "`mail.tracking.value` / `tracking_value_ids` (mutate în modulul mail_tracking în Odoo 20)",
         "adaugă `mail_tracking` în depends sau renunță la valorile de tracking stocate",
     ),
+    "O20-PY-06": (
+        {"20": WARN},
+        "`base64.b64encode()` (bytes) scris într-un câmp Binary (în Odoo 20 dă TypeError la scriere)",
+        "scrie octeții prin `BinaryBytes(continut)` din odoo.tools, un text base64 cu `.decode()` "
+        "sau, pe ir.attachment, în `raw`",
+    ),
     "O20-XML-01": (
         {"20": BLOCK},
         "`ir.model.access.csv` (modelul de ACL e eliminat în Odoo 20)",
@@ -218,6 +224,10 @@ RE_DEZACTIVARE_FISIER = re.compile(r"tb-lint:\s*disable-file=([\w,\s-]+)")
 RE_SERIE = re.compile(r"^\s*(\d+)\.0\.")
 RE_FORMAT_OPTIUNE = re.compile(r"""['"]format['"]\s*:""")
 RE_FONT_AWESOME = re.compile(r"(?:^|\s)fa\s+fa-")
+# O20-PY-06: numele care arata a camp Binary; `_id(s)`/`name` (relatii, nume de fisier) nu sunt binare
+RE_CAMP_BINAR = re.compile(r"image|logo|icon|avatar|file|attachment|pdf|signature|binary|document")
+RE_CAMP_NEBINAR = re.compile(r"(?:_ids?|name)$")
+FUNCTII_B64_BYTES = {"b64encode", "standard_b64encode", "encodebytes"}
 MODELE_GROUP_IDS = {
     "res.users",
     "ir.ui.view",
@@ -392,6 +402,19 @@ def _modele_clasa(clasa):
     return modele
 
 
+def _camp_binar(nume):
+    return bool(nume) and bool(RE_CAMP_BINAR.search(nume)) and not RE_CAMP_NEBINAR.search(nume)
+
+
+def _b64_bytes(nod):
+    """`base64.b64encode(x)` direct (bytes); cu `.decode()` deasupra devine text si nu se semnaleaza."""
+    if not isinstance(nod, ast.Call):
+        return False
+    functie = nod.func
+    nume = functie.attr if isinstance(functie, ast.Attribute) else getattr(functie, "id", None)
+    return nume in FUNCTII_B64_BYTES
+
+
 def _nume_decorator(dec):
     dec = dec.func if isinstance(dec, ast.Call) else dec
     try:
@@ -515,6 +538,8 @@ class VerificatorPython(ast.NodeVisitor):
         for tinta in nod.targets:
             if isinstance(tinta, ast.Attribute) and tinta.attr == "is_company":
                 self.emite(nod, "O20-PY-02")
+            if isinstance(tinta, ast.Attribute) and _camp_binar(tinta.attr) and _b64_bytes(nod.value):
+                self.emite(nod, "O20-PY-06", tinta.attr)
         self.generic_visit(nod)
 
     # -- texte
@@ -535,6 +560,9 @@ class VerificatorPython(ast.NodeVisitor):
             self.emite(chei["is_company"], "O20-PY-02")
         if "groups_id" in chei:
             self.emite(chei["groups_id"], "O19-PY-10")
+        for cheie, valoare in zip(nod.keys, nod.values, strict=True):
+            if _camp_binar(_text(cheie)) and _b64_bytes(valoare):
+                self.emite(cheie, "O20-PY-06", _text(cheie))
         if "order_line" in chei:
             # sale.order/purchase.order create: liniile din `order_line` sunt SOL/POL
             valoare = nod.values[list(nod.keys).index(chei["order_line"])]

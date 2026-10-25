@@ -320,6 +320,27 @@ class TestOdoo20(ModulTemporar):
         self.assertIn("O20-PY-04", self.python('v = {"name": "a", "datas": b, "res_model": "x"}\n'))
         self.assertNotIn("O20-PY-04", self.python('payload = {"name": "a", "datas": b}\n'))
 
+    def test_b64encode_bytes_in_camp_binar(self):
+        cod = """
+        import base64
+        class M(models.Model):
+            def f(self, continut):
+                self.write({"image_1920": base64.b64encode(continut)})
+                self.pdf_file = base64.b64encode(continut)
+                self.write({"image_1920": base64.b64encode(continut).decode()})
+                self.write({"raw": continut, "file_name": base64.b64encode(continut)})
+                payload = {"body": base64.b64encode(continut), "attachment_ids": base64.b64encode(continut)}
+        """
+        self.python(cod)
+        constatari, _n = lint.ruleaza([], [self.tmp], "19")
+        self.assertEqual(
+            sorted((c.linie, c.severitate) for c in constatari if c.regula == "O20-PY-06"), [(4, "warn"), (5, "warn")]
+        )
+
+    def test_b64encode_nu_se_semnaleaza_pe_19(self):
+        self.versiune = "19.0.1.0.0"
+        self.assertNotIn("O20-PY-06", self.python('import base64\nv = {"image_1920": base64.b64encode(b"x")}\n'))
+
     def test_ir_rule_si_acl(self):
         self.manifest(["security/ir.model.access.csv", "security/rules.xml"])
         self.scrie("__init__.py", "")
