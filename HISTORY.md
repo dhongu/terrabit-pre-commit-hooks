@@ -1,5 +1,15 @@
 # Istoric
 
+## 1.6.0
+
+- `check-module-icon` pică, nu mai doar avertizează, la `icon.png` generic (rotițe dințate).
+  Pică și dacă manifestul nu are cheia `images`, dacă lipsește `static/description/banner.json`
+  sau dacă `main_screenshot.png` este bannerul comun „Deltatech – Shared base for the Deltatech
+  suite”. Bannerul comun e recunoscut după hash-ul variantelor 18.0/19.0/20.0 și după bannerul
+  modulului `deltatech` din același repo, pe care hook-ul local `check-module-images` al suitei
+  îl copiază la modulele noi. Excepție: modulul `deltatech`. Iconița se desenează cu skill-ul
+  `iconita-modul`, bannerul se generează cu `banner-modul`.
+
 ## 1.5.0
 
 - `tb-odoo-lint`: regula O20-PY-06 (avertisment, doar pe 20.0) semnalează `base64.b64encode()`
