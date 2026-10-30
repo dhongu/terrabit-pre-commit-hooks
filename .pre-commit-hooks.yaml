@@ -14,7 +14,7 @@
   files: 'pyproject\.toml$'
   pass_filenames: false
 - id: check-module-icon
-  name: Modulul are iconița lui (static/description/icon.png)
+  name: Modulul are iconița și bannerul lui (static/description)
   entry: tb-check-module-icon
   language: python
   files: '__manifest__\.py$'

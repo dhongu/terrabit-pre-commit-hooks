@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "terrabit-pre-commit-hooks"
-version = "1.5.0"
+version = "1.6.0"
 description = "Hook-urile pre-commit comune ale suitelor de module Odoo Terrabit"
 readme = "README.md"
 license = { text = "AGPL-3.0-only" }
