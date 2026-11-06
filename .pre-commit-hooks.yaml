@@ -19,6 +19,12 @@
   language: python
   files: '__manifest__\.py$'
   verbose: true
+- id: check-fisa-consultant
+  name: Modulul nou are fișa consultant (readme/FISA_CONSULTANT.md)
+  entry: tb-check-fisa-consultant
+  language: python
+  files: '__manifest__\.py$'
+  verbose: true
 - id: check-po-vs-pot
   name: Traducerile din .po trebuie sa existe in .pot (altfel Odoo le ignora)
   entry: tb-check-po-vs-pot
