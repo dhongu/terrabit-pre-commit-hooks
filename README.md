@@ -11,6 +11,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `license-compat` | licența modulului e compatibilă cu a dependențelor (Odoo Apps) | la commit, pe `__manifest__.py` |
 | `update-pyproject-name` | `[project].name` din `pyproject.toml` = `odoo-addon-<modul>` | la commit, pe `pyproject.toml` |
 | `check-module-icon` | modulul are `icon.png` propriu (nu iconița generică), `banner.json`, cheia `images` și un `main_screenshot.png` care nu e bannerul comun Deltatech | la commit, pe `__manifest__.py` |
+| `check-fisa-consultant` | modulul nou (manifest absent din `HEAD`) are `readme/FISA_CONSULTANT.md`; la modulele existente fără fișă doar avertizează | la commit, pe `__manifest__.py` |
 | `check-po-vs-pot` | traducerile noi din `.po` există în `.pot` (altfel Odoo le ignoră în tăcere) | la commit, pe `i18n/*.po` |
 | `check-xpath-position` | avertizează la xpath-urile care aleg nodul doar după poziție (`td[2]`, `td[last()-1]`) | la commit, pe `*.xml` |
 | `tb-odoo-lint` | API-uri Odoo 19/20 eliminate sau redenumite (`<tree>`, `attrs=`, `<group expand>` în search, `uom_po_id`, `_sql_constraints`, `get_param` pe 20 etc.), doar în fișierele pe care modulul le încarcă | la commit, pe `*.py`/`*.xml`/`*.csv` |
@@ -55,6 +56,7 @@ Iese cu 1 la o constatare `block`; `--warn-only` iese mereu cu 0.
     - id: license-compat
     - id: update-pyproject-name
     - id: check-module-icon
+    - id: check-fisa-consultant
     - id: check-po-vs-pot
     - id: check-xpath-position
     - id: tb-gen-index
