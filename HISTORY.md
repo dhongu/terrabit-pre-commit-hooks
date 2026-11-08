@@ -1,5 +1,11 @@
 # Istoric
 
+## 1.8.0
+
+- `tb-gen-index`: la modulele fără cod Python (fără `__init__.py`), eticheta de găzduire din
+  antetul paginii Apps Store devine „Odoo Online • Odoo.sh • On-premise”. Astfel de module se
+  încarcă pe Odoo Online ca zip, din Apps > Import Module (`base_import_module`).
+
 ## 1.6.0
 
 - `check-module-icon` pică, nu mai doar avertizează, la `icon.png` generic (rotițe dințate).

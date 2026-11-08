@@ -178,6 +178,7 @@ I18N = {
         "deps_own_row": "This module",
         "deps_total_row": "Price on Odoo Apps",
         "badge_hosting": "Odoo.sh &bull; On-premise",
+        "badge_hosting_online": "Odoo Online &bull; Odoo.sh &bull; On-premise",
         "quality_test": "1 automated test",
         "quality_tests": "%(n)s automated tests",
         "quality_coverage": "%(p)s%% code coverage",
@@ -237,6 +238,7 @@ I18N = {
         "deps_own_row": "Acest modul",
         "deps_total_row": "Preț pe Odoo Apps",
         "badge_hosting": "Odoo.sh &bull; Instalare local&#259; (on-premise)",
+        "badge_hosting_online": "Odoo Online &bull; Odoo.sh &bull; Instalare local&#259; (on-premise)",
         "quality_test": "1 test automat",
         "quality_tests": "%(n)s teste automate",
         "quality_coverage": "acoperire cod %(p)s%%",
@@ -791,7 +793,12 @@ def build_quality(stats, lang="en"):
     return QUALITY % dict(TB, tests=text, coverage=bar)
 
 
-def build_badges(manifest, lang="en"):
+def is_data_only(addon_dir):
+    """Modul fără cod Python (fără `__init__.py`): se importă ca zip și pe Odoo Online."""
+    return not os.path.isfile(os.path.join(addon_dir, "__init__.py"))
+
+
+def build_badges(manifest, lang="en", data_only=False):
     items = []
     ver = str(manifest.get("version", ""))
     m = re.match(r"(\d+\.\d+)", ver)
@@ -801,8 +808,10 @@ def build_badges(manifest, lang="en"):
     if category:
         items.append((BADGE, html_mod.escape(str(category))))
     # modulele terțe cu cod Python nu rulează pe Odoo Online (Apps FAQ): găzduirea e
-    # mereu doar Odoo.sh și on-premise, niciodată „Online”
-    items.append((BADGE, I18N[lang]["badge_hosting"]))
+    # Odoo.sh și on-premise. Excepție: modulele fără Python (doar date, fără `__init__.py`),
+    # care se încarcă pe Odoo Online prin Apps > Import Module (`base_import_module`).
+    key = "badge_hosting_online" if data_only else "badge_hosting"
+    items.append((BADGE, I18N[lang][key]))
     license_ = manifest.get("license")
     if license_:
         items.append((BADGE_LICENSE, html_mod.escape(str(license_))))
@@ -839,7 +848,7 @@ def build_hero(addon_dir, manifest, lang="en"):
         icon=icon,
         name=name,
         summary=(SUMMARY % summary) if summary else "",
-        badges=build_badges(manifest, lang),
+        badges=build_badges(manifest, lang, data_only=is_data_only(addon_dir)),
         quality=build_quality(read_test_stats(addon_dir), lang),
     )
 
