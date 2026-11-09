@@ -17,7 +17,14 @@ De ce generare directă (nu skin peste docutils):
 Reguli sanitizer Apps Store (moștenite din tb_skin_index v5, validate pe store real):
   - ȘTERGE <style> și <script>       → doar clase Bootstrap + stiluri inline;
   - ȘTERGE <svg> inline              → logo doar <img> sau wordmark text;
-  - TAIE `background:`/gradient      → supraviețuiește DOAR `background-color` solid;
+  - style inline trece prin whitelist-ul `_Cleaner._style_whitelist` din odoo/tools/mail.py:
+    `background-image` (gradienți, url()) și `font-family` TREC; forma prescurtată
+    `background:`, `gap`, `flex-basis`, `overflow`, `position` și variabilele `--*` NU.
+    `border-left` (prescurtat) nu trece, longhand-urile `border-left-width/style/color` da.
+    Gradientul stă mereu peste un `background-color` solid, rezerva pentru backend;
+  - Font Awesome 4 (`fa fa-*`) și fontul Caveat sunt încărcate de store, iar markerele de
+    titlu sunt SVG-urile store-ului (openerp_website/.../highlights/), ca pe paginile Odoo.
+    (Văzut pe eb_bill_integration / echoBitz, 09.11.2026.)
   - PĂSTREAZĂ `class` și `data-bs-*` → clasele Bootstrap 5 sunt stilizate de bundle-ul
     frontend al store-ului, iar componentele declarative (nav-pills cu data-bs-toggle)
     sunt activate de bootstrap.bundle.js al store-ului — fără JS propriu.
@@ -106,6 +113,19 @@ TB = {
 }
 
 FONT = "'Segoe UI','Avenir Next','Helvetica Neue',Arial,sans-serif"
+
+# Titlurile de secțiune: Caveat, fontul de mână al paginilor Odoo, încărcat de apps.odoo.com.
+# În backend (Apps > modul) Caveat poate lipsi; rezerva Georgia rămâne lizibilă.
+TITLE_FONT = "'Caveat',Georgia,'Times New Roman',serif"
+# Markerul de sub ultimul cuvânt din titlu: SVG-ul store-ului, ca pe paginile Odoo. Fiind
+# `background-image` pe un <span>, unde nu se încarcă imaginea titlul rămâne simplu.
+MARKER_URL = "https://apps.odoo.com/openerp_website/static/src/img/highlights/green_highlight_03.svg"
+MARKER_STYLE = (
+    "display:inline-block;padding:0 6px;white-space:nowrap;"
+    f"background-image:url({MARKER_URL});background-position:center 75%;"
+    "background-repeat:no-repeat;background-size:100% 60%;"
+)
+PALE = "#DEF1DD"  # verdele pal al casetelor (rating, abonament, iconițe)
 
 MD_EXTENSIONS = ["tables", "fenced_code", "sane_lists"]
 
@@ -312,8 +332,16 @@ WRAP_OPEN = (
 # Spațiile vin din margin, nu din `gap`: sanitizer-ul scoate `gap` și `flex-basis` din style
 # (iconița se lipea de titlu). Lățimea de pornire a textului e `width` (= baza flex la
 # flex-basis:auto); marginea dreaptă a textului dispare natural când panoul coboară.
+# Fundalul: gradient verde Terrabit cu două halouri (ca hero-urile Odoo) peste
+# `background-color` plin; unde gradientul nu se aplică, rămâne verdele plin de până acum.
+HERO_BG = (
+    "background-color:%(primary)s;"
+    "background-image:radial-gradient(circle at 92%% 8%%, rgba(87,185,82,0.45), rgba(87,185,82,0) 38%%),"
+    "radial-gradient(circle at 4%% 100%%, rgba(255,255,255,0.12), rgba(255,255,255,0) 32%%),"
+    "linear-gradient(135deg, #007a49 0%%, #005c38 55%%, #00432a 100%%);"
+)
 HERO = """%(marker)s
-<div class="rounded-4 shadow px-4 py-4 mt-2 mb-4" style="background-color:%(primary)s;color:#ffffff;">
+<div class="rounded-4 shadow px-4 py-4 mt-2 mb-4" style="%(hero_bg)scolor:#ffffff;">
   <div class="d-flex flex-wrap align-items-center">
     %(icon)s
     <div class="flex-grow-1 my-2" style="width:320px;min-width:0;margin-right:24px;">
@@ -527,10 +555,67 @@ DEPS_CLOSE = "</section>\n"
 # lista imbricată lipită de titlu; aceleași setări pentru toate grilele (Key Features, Benefits...).
 UL_GRID = "list-unstyled row row-cols-1 row-cols-md-2 g-2 mt-1 mb-4"
 CARD = "border rounded-3 px-3 py-2 h-100"
-BADGE_TICK = "flex-shrink-0 text-center fw-bold rounded d-inline-block"
-BADGE_TICK_STYLE = (
-    f"background-color:{TB['accent']};color:#04331f;width:22px;height:22px;line-height:22px;font-size:13px;"
+# Fiecare card primește o iconiță Font Awesome pe pătrat verde pal, aleasă după cuvintele
+# din textul cardului (FEATURE_ICONS, vezi feature_icon); fără potrivire, bifa.
+CARD_ICON = "flex-shrink-0 text-center rounded-3 d-inline-block me-2"
+CARD_ICON_STYLE = (
+    f"background-color:{PALE};color:{TB['primary']};width:30px;height:30px;line-height:30px;font-size:15px;"
 )
+FEATURE_ICON_DEFAULT = "check"
+FEATURE_ICONS = [
+    (r"\b(e-?factura|e-?invoic|ubl|cius|spv|anaf|e-?transport|saf-?t|d39\d|d300|d112)", "university"),
+    (r"\b(vat|tva|tax|tax[ae]|fiscal)", "percent"),
+    (r"\b(invoice|invoic|factur|bill)", "file-text-o"),
+    (r"\b(employee|angajat|hr|salar|payroll|timesheet|pontaj)", "id-badge"),
+    (r"\b(manufactur|product(ion)?\s+order|mrp|bom|product[ia]e|work ?order)", "industry"),
+    (r"\b(payment|pay|plat|incas|cash|bank|banc)", "credit-card"),
+    (r"\b(price|pricing|pret|discount|reducer|cost|margin|marj)", "tag"),
+    (r"\b(stock|inventor|warehouse|depozit|gestiun|lot|serial|quant)", "cubes"),
+    (r"\b(deliver|livrar|shipping|courier|curier|awb|transport|picking|transfer)", "truck"),
+    (r"\b(purchase|achizit|vendor|supplier|furnizor)", "shopping-cart"),
+    (r"\b(sales?\b|vanzar|orders?\b|comand|quotation|ofert)", "shopping-bag"),
+    (r"\b(product|produs|variant|article|articol)", "cube"),
+    (r"\b(customer|client|partner|partener|contact)", "users"),
+    (r"\b(website|e-?commerce|shop|magazin|portal)", "globe"),
+    (r"\b(report|raport|dashboard|analys|analiz|statistic|kpi|chart)", "bar-chart"),
+    (r"\b(print|tipar|pdf|qweb|label|etichet)", "print"),
+    (r"\b(import|export|excel|xlsx|csv|xml|json)", "exchange"),
+    (r"\b(api|sync|sincron|connector|conector|integrat|webhook|marketplace)", "plug"),
+    (r"\b(email|e-mail|mail|message|mesaj|notif|sms|whatsapp)", "envelope-o"),
+    (r"\b(schedul|cron|automat|planific|recurr)", "clock-o"),
+    (r"\b(date|calendar|deadline|termen|period)", "calendar"),
+    (r"\b(secur|access|permission|rights?\b|drept|lock|password)", "lock"),
+    (r"\b(company|compan|multi-company|firm)", "building-o"),
+    (r"\b(account|contab|journal|jurnal|ledger|balance|bilan)", "book"),
+    (r"\b(image|imagin|photo|picture|foto)", "picture-o"),
+    (r"\b(document|attach|atasament|file|fisier)", "paperclip"),
+    (r"\b(search|cauta|filter|filtr)", "search"),
+    (r"\b(config|setting|setar|option|parametr)", "sliders"),
+    (r"\b(log|history|istoric|audit|track|urmar)", "history"),
+    (r"\b(fleet|flota|vehicle|vehicul|utilaj|car)\b", "car"),
+    (r"\b(project|proiect|task|sarcin)", "tasks"),
+    (r"\b(test|quality|calitat|check|verific|validat)", "check-square-o"),
+    (r"\b(fast|speed|performan|rapid|optimi)", "bolt"),
+]
+
+
+def feature_icon(html_text):
+    """Iconița Font Awesome potrivită cu textul unui card (fără tag-uri, fără diacritice).
+
+    Câștigă cuvântul-cheie care apare cel mai devreme în text — subiectul cardului stă de
+    obicei la început („Additional vehicle data: ... serial number” → mașină, nu stoc); la
+    egalitate, ordinea din FEATURE_ICONS."""
+    text = _norm(html_text)
+    best = None
+    for order, (pattern, icon) in enumerate(FEATURE_ICONS):
+        m = re.search(pattern, text)
+        if m and (best is None or (m.start(), order) < best[:2]):
+            best = (m.start(), order, icon)
+    return best[2] if best else FEATURE_ICON_DEFAULT
+
+
+def _card_icon(html_text):
+    return f'<span class="{CARD_ICON}" style="{CARD_ICON_STYLE}">{_fa(feature_icon(html_text), "")}</span>'
 SUB_UL = "ps-3 mt-1 mb-0"
 SUB_LI = "small"
 
@@ -616,17 +701,41 @@ def read_framework_features(addon_dir):
 # ----------------------------------------------------------------------------- #
 
 
+# Bara verde din stânga titlurilor mici: longhand-uri, pentru că store-ul taie `border-left`
+# prescurtat (bara nu apărea pe pagina publicată).
+ACCENT_BAR = (
+    "border:none;border-left-width:4px;border-left-style:solid;"
+    f"border-left-color:{TB['accent']};padding-left:16px;"
+)
+
+
+def marker_title(inner):
+    """Ultimul cuvânt al unui titlu simplu, pus pe markerul verde al store-ului."""
+    if "<" in inner or not inner.strip():
+        return inner
+    head, _sep, last = inner.strip().rpartition(" ")
+    marked = f'<span style="{MARKER_STYLE}">{last}</span>'
+    return f"{head} {marked}" if head else marked
+
+
+def section_title(inner, tag="h2", extra_class="mt-5 mb-3"):
+    """Titlu de secțiune în stil Odoo: Caveat, verde, cu marker sub ultimul cuvânt."""
+    style = (
+        f"border:none;font-family:{TITLE_FONT};font-weight:700;color:{TB['primary']};"
+        "font-size:36px;line-height:1.1;letter-spacing:0;"
+    )
+    return f'<{tag} class="{extra_class}" style="{style}">{marker_title(inner)}</{tag}>'
+
+
 def style_headings(rendered):
-    """Heading-uri cu bară-accent verde la stânga; FĂRĂ `color` -> moștenește tema."""
-    sizes = {"h1": 24, "h2": 24, "h3": 19, "h4": 17}
+    """h1/h2 → titluri de secțiune (Caveat + marker); h3/h4 → bară-accent verde."""
+    sizes = {"h3": 19, "h4": 17}
 
     def repl(m):
         tag, inner = m.group(1).lower(), m.group(2)
-        size = sizes.get(tag, 17)
-        style = (
-            f"border:none;border-left:4px solid {TB['accent']};padding-left:16px;"
-            f"font-size:{size}px;letter-spacing:-0.3px;line-height:1.2;"
-        )
+        if tag in ("h1", "h2"):
+            return section_title(inner, "h2")
+        style = f"{ACCENT_BAR}font-size:{sizes[tag]}px;letter-spacing:-0.3px;line-height:1.2;"
         return f'<{tag} class="fw-bold mt-4 mb-3" style="{style}">{inner}</{tag}>'
 
     return re.sub(r"<(h[1-4])\b[^>]*>(.*?)</\1>", repl, rendered, flags=re.I | re.S)
@@ -710,13 +819,13 @@ def _render_cards(inner, top):
             lead = dm.group(1).strip()
             rest = _style_sublists(dm.group(2).strip())
             parts.append(
-                f'<li class="col"><div class="{CARD}"><span class="fw-bold">{lead}</span><div>{rest}</div></div></li>'
+                f'<li class="col"><div class="{CARD} d-flex align-items-start">{_card_icon(lead)}'
+                f'<div><span class="fw-bold">{lead}</span><div>{rest}</div></div></div></li>'
             )
         else:
             content = _style_sublists(raw)
             parts.append(
-                f'<li class="col"><div class="{CARD} d-flex gap-2">'
-                f'<span class="{BADGE_TICK}" style="{BADGE_TICK_STYLE}">&#10003;</span>'
+                f'<li class="col"><div class="{CARD} d-flex align-items-start">{_card_icon(content)}'
                 f"<div>{content}</div></div></li>"
             )
     return "".join(parts)
@@ -798,23 +907,28 @@ def is_data_only(addon_dir):
     return not os.path.isfile(os.path.join(addon_dir, "__init__.py"))
 
 
+def _fa(icon, style="margin-right:6px;"):
+    """Iconiță Font Awesome 4 (încărcat de store și de backendul Odoo)."""
+    return f'<span class="fa fa-{icon}" style="{style}" aria-hidden="true"></span>'
+
+
 def build_badges(manifest, lang="en", data_only=False):
     items = []
     ver = str(manifest.get("version", ""))
     m = re.match(r"(\d+\.\d+)", ver)
     if m:
-        items.append((BADGE_ACCENT, f"Odoo {m.group(1)}"))
+        items.append((BADGE_ACCENT, _fa("check-circle") + f"Odoo {m.group(1)}"))
     category = manifest.get("category")
     if category:
-        items.append((BADGE, html_mod.escape(str(category))))
+        items.append((BADGE, _fa("folder-open-o") + html_mod.escape(str(category))))
     # modulele terțe cu cod Python nu rulează pe Odoo Online (Apps FAQ): găzduirea e
     # Odoo.sh și on-premise. Excepție: modulele fără Python (doar date, fără `__init__.py`),
     # care se încarcă pe Odoo Online prin Apps > Import Module (`base_import_module`).
     key = "badge_hosting_online" if data_only else "badge_hosting"
-    items.append((BADGE, I18N[lang][key]))
+    items.append((BADGE, _fa("cloud") + I18N[lang][key]))
     license_ = manifest.get("license")
     if license_:
-        items.append((BADGE_LICENSE, html_mod.escape(str(license_))))
+        items.append((BADGE_LICENSE, _fa("balance-scale") + html_mod.escape(str(license_))))
     return "\n        ".join(tmpl % dict(TB, t=t) for tmpl, t in items)
 
 
@@ -844,6 +958,7 @@ def build_hero(addon_dir, manifest, lang="en"):
         icon = HERO_ICON % {"name": name}
     return HERO % dict(
         TB,
+        hero_bg=HERO_BG % TB,
         marker=TB_MARKER,
         icon=icon,
         name=name,
@@ -905,6 +1020,34 @@ def style_inline_images(rendered):
     )
 
 
+# Captură singură într-un paragraf → card numerotat cu legenda din textul alternativ
+# (ca „Feature Deep Dive” de pe paginile bune din store). Capturile din mijlocul textului
+# rămân pe style_inline_images.
+FIGURE = """<div class="border rounded-4 shadow-sm my-4" style="background-color:#ffffff;">
+  <div class="p-2 rounded-top-4" style="background-color:#f4f8f4;">
+    <img class="img-fluid d-block mx-auto rounded-3" style="max-width:100%%;height:auto;" %(attrs)s/>
+  </div>
+  <div class="d-flex align-items-center px-3 py-2 border-top">
+    <span class="flex-shrink-0 text-center fw-bold rounded-circle d-inline-block me-2"
+          style="background-color:%(primary)s;color:#ffffff;width:26px;height:26px;line-height:26px;font-size:13px;">%(n)s</span>
+    <span style="font-size:14px;line-height:1.4;color:%(muted)s;">%(caption)s</span>
+  </div>
+</div>"""
+
+
+def style_gallery(rendered):
+    """Capturile singure în paragraf devin carduri numerotate, în ordinea din tab."""
+    counter = iter(range(1, 1000))
+
+    def repl(m):
+        attrs = m.group(1).strip().rstrip("/").strip()
+        alt = re.search(r'\balt="([^"]*)"', attrs)
+        caption = alt.group(1) if alt else ""
+        return FIGURE % dict(TB, attrs=attrs, n=next(counter), caption=caption)
+
+    return re.sub(r"<p>\s*<img\b([^>]*)>\s*</p>", repl, rendered)
+
+
 def fix_image_paths(rendered):
     """Căile imaginilor relative la index.html, nu la rădăcina modulului.
 
@@ -923,6 +1066,7 @@ def build_panel_body(key, md_text):
     if key == "presentation":
         rendered = style_images(rendered)
     else:
+        rendered = style_gallery(rendered)
         rendered = style_inline_images(rendered)
     if key in ("overview", "romana"):
         rendered = style_feature_lists(rendered)
@@ -931,16 +1075,29 @@ def build_panel_body(key, md_text):
     return rendered
 
 
+TAB_ICONS = {
+    "overview": "star",
+    "presentation": "television",
+    "configure": "cogs",
+    "usage": "book",
+    "romana": "language",
+    "versions": "history",
+}
+
+# Eticheta mică de deasupra panoului („eyebrow”): numele tabului, cu iconiță, pe verde pal.
+EYEBROW = (
+    '<div class="mb-2"><span class="d-inline-block rounded-pill fw-bold text-uppercase"'
+    f' style="background-color:{PALE};color:{TB["primary"]};padding:5px 14px;font-size:12px;'
+    'letter-spacing:0.14em;">%(icon)s%(title)s</span></div>'
+)
+
+
 def build_tabs(tabs):
     if not tabs:
         return ""
-    accent_bar = (
-        f"border:none;border-left:4px solid {TB['accent']};padding-left:16px;"
-        "font-size:24px;letter-spacing:-0.3px;line-height:1.2;"
-    )
     panes = []
     for i, (key, title, md_text) in enumerate(tabs):
-        heading = f'<h2 class="fw-bold mb-3" style="{accent_bar}">{title}</h2>'
+        heading = EYEBROW % {"icon": _fa(TAB_ICONS.get(key, "star")), "title": title}
         if key == "romana":
             # tabul se numește deja „Română”: titlul ar repeta numele tabului, iar
             # subtitlurile Prezentare / Configurare / Utilizare țin loc de titlu
@@ -959,7 +1116,8 @@ def build_tabs(tabs):
         return panes[0]
     nav = [NAV_OPEN]
     for i, (key, title, _md) in enumerate(tabs):
-        nav.append(NAV_ITEM % {"active": " active" if i == 0 else "", "key": key, "title": title})
+        icon = _fa(TAB_ICONS.get(key, "star"))
+        nav.append(NAV_ITEM % {"active": " active" if i == 0 else "", "key": key, "title": icon + title})
     nav.append(NAV_CLOSE)
     return "\n".join(nav) + '\n<div class="tab-content">\n' + "\n".join(panes) + "\n</div>"
 

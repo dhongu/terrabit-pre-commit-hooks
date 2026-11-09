@@ -10,10 +10,10 @@ De ce e necesar:
     - ȘTERGE <style>...</style>            (orice CSS dintr-un bloc <style> dispare);
     - DESPACHETEAZĂ <div class="document"> (selectoarele .document … nu mai potrivesc);
     - ȘTERGE <svg> inline                  (logo SVG inline dispare);
-    - TAIE `background:`/`linear-gradient` din style inline (supraviețuiește doar
-      `background-color` solid);
-    - TAIE din style inline `gap`, `flex-basis`, `border-left` și variabilele CSS `--*`
-      (observat pe pagina publicată, 12.10.2026).
+    - filtrează style inline prin whitelist-ul `_Cleaner._style_whitelist` din
+      odoo/tools/mail.py (copiat mai jos în STYLE_WHITELIST): trec `background-color`,
+      `background-image` (gradienți, url()), `font-family`, `border-left-*`; cad
+      `background:`, `gap`, `flex-basis`, `border-left`, `overflow` și variabilele `--*`.
   Paginile le generează tb-gen-index (același repo).
 
 Test „worst-case" pentru dark:
@@ -53,23 +53,35 @@ def sanitize_like_apps_store(html):
     return html
 
 
-# proprietăți scoase de store din style inline (comparat sursa cu pagina publicată)
-DROPPED_PROPS = {"gap", "flex-basis", "border-left"}
+# Copia whitelist-ului din odoo/tools/mail.py (_Cleaner._style_whitelist, Odoo 19): store-ul
+# păstrează din style inline doar aceste proprietăți. Confirmat pe store: gradienții din
+# `background-image` trec (eb_bill_integration, 09.11.2026), `gap`/`flex-basis` nu.
+STYLE_WHITELIST = {
+    "font-size", "font-family", "font-weight", "font-style", "background-color", "color", "text-align",
+    "line-height", "letter-spacing", "text-transform", "text-decoration", "opacity",
+    "float", "vertical-align", "display", "object-fit", "direction",
+    "padding", "padding-top", "padding-left", "padding-bottom", "padding-right",
+    "margin", "margin-top", "margin-left", "margin-bottom", "margin-right",
+    "white-space",
+    "background-image", "background-position", "background-size", "background-repeat", "background-origin",
+    "border", "border-color", "border-radius", "border-style", "border-width", "border-top", "border-bottom",
+    "height", "width", "max-width", "min-width", "min-height",
+    "border-collapse", "border-spacing", "caption-side", "empty-cells", "table-layout",
+} | {
+    f"border-{pos}-{attr}"
+    for pos in ("top", "bottom", "left", "right")
+    for attr in ("style", "color", "width", "left-radius", "right-radius")
+}
 
 
 def _clean_style(m, q='"'):
     decls = []
+    # `;` din interiorul url()/gradient nu apare în practică; split simplu ca înainte
     for decl in m.group(1).split(";"):
         if not decl.strip():
             continue
         prop = decl.split(":", 1)[0].strip().lower()
-        val = decl.split(":", 1)[1].lower() if ":" in decl else ""
-        # `background` shorthand și orice gradient sunt eliminate de store
-        if prop == "background":
-            continue
-        if prop in DROPPED_PROPS or prop.startswith("--"):
-            continue
-        if "linear-gradient" in val or "radial-gradient" in val:
+        if prop not in STYLE_WHITELIST:
             continue
         decls.append(decl.strip())
     return f"style={q}{';'.join(decls)}{q}"
@@ -109,6 +121,8 @@ SHELL = """<!doctype html><html%(htmlattr)s><head><meta charset="utf-8">
 <title>Apps Store preview — %(mode)s</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-body text-body" style="margin:0;%(bodystyle)s">
 <div style="max-width:1180px;margin:0 auto;padding:24px;">

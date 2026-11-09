@@ -1,5 +1,17 @@
 # Istoric
 
+## 1.9.0
+
+- `tb-gen-index`: pagina Apps Store preia elementele paginilor bune din store
+  (ex. eb_bill_integration): antet cu gradient verde (peste fundalul plin, păstrat ca rezervă),
+  iconițe Font Awesome pe insignele din antet, pe taburi și pe cardurile de funcții (alese după
+  cuvintele din text), titlurile `##` în fontul Caveat cu markerul verde al store-ului, eticheta
+  tabului deasupra panoului și capturile singure în paragraf ca galerie numerotată, cu legenda
+  din textul alternativ. Bara verde a titlurilor mici folosește `border-left-*`, pentru că
+  store-ul taie `border-left` prescurtat.
+- `tb_apps_preview.py` filtrează stilurile inline după whitelist-ul real al sanitizer-ului Odoo
+  (`_Cleaner._style_whitelist`) și încarcă Font Awesome 4 și Caveat, ca pe store.
+
 ## 1.8.1
 
 - `tb-gen-index`: numărul de module din pagina Apps Store (cardul cu cifra și textul despre
