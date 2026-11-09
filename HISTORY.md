@@ -1,5 +1,10 @@
 # Istoric
 
+## 1.8.1
+
+- `tb-gen-index`: numărul de module din pagina Apps Store (cardul cu cifra și textul despre
+  aplicațiile Terrabit) devine „600+”, cât arată acum Apps Store pe 19.0, în loc de „350+”.
+
 ## 1.8.0
 
 - `tb-gen-index`: la modulele fără cod Python (fără `__init__.py`), eticheta de găzduire din

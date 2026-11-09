@@ -161,7 +161,7 @@ I18N = {
         "support_cta": "Terrabit support &rarr;",
         # ruperile de rând reproduc pagina generată înainte, ca sincronizarea să nu rescrie
         # sute de index.html doar pe spații; titlul cardului e support_title
-        "story_body": "Our 350+ apps on the Odoo Apps Store are used in Odoo implementations across Europe,\n"
+        "story_body": "Our 600+ apps on the Odoo Apps Store are used in Odoo implementations across Europe,\n"
         "     the Americas, Asia and Africa &mdash; by companies we have never even met. That is the\n"
         "     advantage of building modules that simply work.",
         "cross_title": "More apps by Terrabit",
@@ -220,7 +220,7 @@ I18N = {
         "support_body": "Ave&#539;i &#238;ntreb&#259;ri despre modul sau vre&#539;i s&#259; &#238;l adapt&#259;m "
         "proceselor voastre? Scrie&#539;i-ne &mdash; v&#259; r&#259;spund programatorii care &#238;l dezvolt&#259;.",
         "support_cta": "Suport Terrabit &rarr;",
-        "story_body": "Cele peste 350 de aplica&#539;ii ale noastre de pe Odoo Apps Store sunt "
+        "story_body": "Cele peste 600 de aplica&#539;ii ale noastre de pe Odoo Apps Store sunt "
         "folosite &#238;n implement&#259;ri Odoo din Europa, America, Asia &#537;i Africa &mdash; de "
         "companii pe care nu le-am cunoscut niciodat&#259;. Acesta e avantajul modulelor care pur &#537;i "
         "simplu func&#539;ioneaz&#259;.",
@@ -402,7 +402,7 @@ STAT_CARD = """<div class="col-md-%(col)s">
 # Date factuale despre autor (numărul de module publicate și întreținute pe Apps, nivelul
 # de parteneriat), nu promoții sau reclame în sensul vendor guidelines.
 STAT_ITEMS = [
-    ("350+", "stat_modules"),
+    ("600+", "stat_modules"),
     ("Silver", "stat_partner"),
 ]
 
