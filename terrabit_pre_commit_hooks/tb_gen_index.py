@@ -198,6 +198,7 @@ I18N = {
         "deps_own_row": "This module",
         "deps_total_row": "Price on Odoo Apps",
         "badge_hosting": "Odoo.sh &bull; On-premise",
+        "badge_eu": "European Union",
         "badge_hosting_online": "Odoo Online &bull; Odoo.sh &bull; On-premise",
         "quality_test": "1 automated test",
         "quality_tests": "%(n)s automated tests",
@@ -258,6 +259,7 @@ I18N = {
         "deps_own_row": "Acest modul",
         "deps_total_row": "Preț pe Odoo Apps",
         "badge_hosting": "Odoo.sh &bull; Instalare local&#259; (on-premise)",
+        "badge_eu": "Uniunea European&#259;",
         "badge_hosting_online": "Odoo Online &bull; Odoo.sh &bull; Instalare local&#259; (on-premise)",
         "quality_test": "1 test automat",
         "quality_tests": "%(n)s teste automate",
@@ -912,7 +914,57 @@ def _fa(icon, style="margin-right:6px;"):
     return f'<span class="fa fa-{icon}" style="{style}" aria-hidden="true"></span>'
 
 
-def build_badges(manifest, lang="en", data_only=False):
+# Limbile din antet: aceeași regulă ca rândul de limbi din banner (skill-ul banner-modul), ca
+# pagina și miniatura să spună același lucru. O limbă contează de la LANG_MIN_PCT tradus
+# (fără `fuzzy`); insigna apare doar peste EN + RO, adică de la LANG_MIN_COUNT limbi.
+LANG_ORDER = ["en", "ro", "de", "fr", "it", "es", "nl", "pl", "pt", "bg", "hu", "cs"]
+LANG_MIN_PCT = 90.0
+LANG_MIN_COUNT = 3
+PO_ENTRY_RE = re.compile(
+    r'^(#,[^\n]*\n)?(?:msgctxt [^\n]*\n(?:"[^\n]*"\n)*)?msgid ((?:"[^\n]*"\n)+)msgstr ((?:"[^\n]*"\n?)+)', re.M
+)
+
+
+def po_coverage(po_path):
+    """Procentul de intrări traduse (fără antet și fără `fuzzy`) dintr-un fișier .po."""
+
+    def unq(block):
+        return "".join(re.findall(r'"(.*)"', block))
+
+    with open(po_path, encoding="utf8", errors="ignore") as f:
+        text = f.read() + "\n"
+    total = done = 0
+    for flags, msgid, msgstr in PO_ENTRY_RE.findall(text):
+        if not unq(msgid):
+            continue
+        total += 1
+        done += bool(unq(msgstr)) and "fuzzy" not in (flags or "")
+    return 100.0 * done / total if total else 0.0
+
+
+def shipped_languages(addon_dir):
+    """Engleza (sursa) + fiecare i18n/<limbă>.po tradus cel puțin LANG_MIN_PCT, în ordinea LANG_ORDER."""
+    langs = {"en"}
+    i18n = os.path.join(addon_dir, "i18n")
+    if os.path.isdir(i18n):
+        for fn in os.listdir(i18n):
+            if fn.endswith(".po") and po_coverage(os.path.join(i18n, fn)) >= LANG_MIN_PCT:
+                langs.add(fn[:-3].split("_")[0].lower())
+    return sorted(langs, key=lambda c: (LANG_ORDER.index(c) if c in LANG_ORDER else len(LANG_ORDER), c))
+
+
+def is_eu(addon_dir):
+    """`"eu": true` din banner.json: modulul aplică o regulă UE sau merge în mai multe țări
+    europene (aceeași cheie ca steagul UE din banner). Citit indiferent de limba bannerului."""
+    path = os.path.join(addon_dir, "static", "description", "banner.json")
+    try:
+        with open(path, encoding="utf8") as f:
+            return json.load(f).get("eu") is True
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def build_badges(manifest, lang="en", data_only=False, languages=None, eu=False):
     items = []
     ver = str(manifest.get("version", ""))
     m = re.match(r"(\d+\.\d+)", ver)
@@ -921,6 +973,11 @@ def build_badges(manifest, lang="en", data_only=False):
     category = manifest.get("category")
     if category:
         items.append((BADGE, _fa("folder-open-o") + html_mod.escape(str(category))))
+    if eu:
+        items.append((BADGE, _fa("globe") + I18N[lang]["badge_eu"]))
+    if languages and len(languages) >= LANG_MIN_COUNT:
+        codes = " &middot; ".join(html_mod.escape(c.upper()) for c in languages)
+        items.append((BADGE, _fa("language") + codes))
     # modulele terțe cu cod Python nu rulează pe Odoo Online (Apps FAQ): găzduirea e
     # Odoo.sh și on-premise. Excepție: modulele fără Python (doar date, fără `__init__.py`),
     # care se încarcă pe Odoo Online prin Apps > Import Module (`base_import_module`).
@@ -963,7 +1020,13 @@ def build_hero(addon_dir, manifest, lang="en"):
         icon=icon,
         name=name,
         summary=(SUMMARY % summary) if summary else "",
-        badges=build_badges(manifest, lang, data_only=is_data_only(addon_dir)),
+        badges=build_badges(
+            manifest,
+            lang,
+            data_only=is_data_only(addon_dir),
+            languages=shipped_languages(addon_dir),
+            eu=is_eu(addon_dir),
+        ),
         quality=build_quality(read_test_stats(addon_dir), lang),
     )
 

@@ -1,5 +1,13 @@
 # Istoric
 
+## 1.10.0
+
+- `tb-gen-index`: două insigne noi în antetul paginii Apps Store, cu aceleași reguli ca
+  bannerul (skill-ul `banner-modul`): **limbile** livrate („EN · RO · DE · FR · IT · ES”),
+  adică engleza plus fiecare `i18n/<limbă>.po` tradus cel puțin 90% (fără `fuzzy`), doar de la
+  3 limbi în sus; **Uniunea Europeană** pentru modulele cu `"eu": true` în `banner.json`
+  (aplică o regulă UE sau merg în mai multe țări europene).
+
 ## 1.9.0
 
 - `tb-gen-index`: pagina Apps Store preia elementele paginilor bune din store
