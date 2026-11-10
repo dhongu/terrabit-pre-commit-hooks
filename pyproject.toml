@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "terrabit-pre-commit-hooks"
-version = "1.11.1"
+version = "1.12.0"
 description = "Hook-urile pre-commit comune ale suitelor de module Odoo Terrabit"
 readme = "README.md"
 license = { text = "AGPL-3.0-only" }
@@ -18,6 +18,7 @@ readme = ["jinja2", "docutils", "pypandoc-binary"]
 [project.scripts]
 tb-gen-index = "terrabit_pre_commit_hooks.tb_gen_index:main"
 tb-test-stats = "terrabit_pre_commit_hooks.tb_test_stats:main"
+tb-gen-docs = "terrabit_pre_commit_hooks.tb_gen_docs:main"
 tb-gen-readme = "terrabit_pre_commit_hooks.tb_gen_readme:main"
 tb-fisa-badge = "terrabit_pre_commit_hooks.tb_fisa_badge:main"
 tb-test-badge = "terrabit_pre_commit_hooks.tb_test_badge:main"

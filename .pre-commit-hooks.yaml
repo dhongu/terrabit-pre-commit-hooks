@@ -55,6 +55,12 @@
   language: python
   additional_dependencies: [jinja2, docutils, pypandoc-binary]
   files: '(^|/)(readme/[^/]+\.(md|rst)|__manifest__\.py|scripts/test_stats\.json)$'
+- id: tb-gen-docs
+  name: README.rst și index.html (Apps Store) din readme/*.md, într-o singură trecere
+  entry: tb-gen-docs --addons-dir=.
+  language: python
+  additional_dependencies: [jinja2, docutils, pypandoc-binary]
+  files: '(^|/)(readme/[^/]+\.(md|rst)|__manifest__\.py|scripts/test_stats\.json|static/description/banner\.json|i18n/[a-zA-Z_]+\.po)$'
 - id: tb-fisa-badge
   name: Badge „Fișă consultant” în README.rst
   entry: tb-fisa-badge --addons-dir=.

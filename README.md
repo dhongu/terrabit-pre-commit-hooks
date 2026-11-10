@@ -16,6 +16,7 @@ Hook-urile [pre-commit](https://pre-commit.com) comune ale suitelor de module Od
 | `check-xpath-position` | avertizează la xpath-urile care aleg nodul doar după poziție (`td[2]`, `td[last()-1]`) | la commit, pe `*.xml` |
 | `tb-odoo-lint` | API-uri Odoo 19/20 eliminate sau redenumite (`<tree>`, `attrs=`, `<group expand>` în search, `uom_po_id`, `_sql_constraints`, `get_param` pe 20 etc.), doar în fișierele pe care modulul le încarcă | la commit, pe `*.py`/`*.xml`/`*.csv` |
 | `tb-gen-index` | generează `static/description/index.html` (Apps Store) din `readme/*.md` | manual |
+| `tb-gen-docs` | `README.rst` și `index.html` într-o singură trecere (`tb-gen-readme` + `tb-gen-index`), pe `--files`; același rezultat ca hook-urile separate | la cerere / la commit pe `readme/*`, manifest, `scripts/test_stats.json`, `banner.json`, `i18n/*.po` |
 | `tb-gen-readme` | generează `README.rst` din `readme/*.md` fără `oca-gen-addon-readme`, cu insignele fișă și teste incluse; rulează pe `--files` (suitele Terrabit; `--no-roadmap` la bitshop/deltatech) | la cerere / la commit pe `readme/*`, manifest |
 | `tb-fisa-badge` | badge „Fișă consultant” în `README.rst` | manual |
 | `tb-test-stats` | scrie `scripts/test_stats.json` (teste + acoperire Codecov) | manual |
