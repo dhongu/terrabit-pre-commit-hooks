@@ -49,6 +49,12 @@
   stages: [manual]
   pass_filenames: false
   always_run: true
+- id: tb-gen-readme
+  name: README.rst din readme/*.md, cu badge-urile Fișă consultant și teste (fără oca-gen-addon-readme)
+  entry: tb-gen-readme --addons-dir=.
+  language: python
+  additional_dependencies: [jinja2, docutils, pypandoc-binary]
+  files: '(^|/)(readme/[^/]+\.(md|rst)|__manifest__\.py|scripts/test_stats\.json)$'
 - id: tb-fisa-badge
   name: Badge „Fișă consultant” în README.rst
   entry: tb-fisa-badge --addons-dir=.

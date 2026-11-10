@@ -102,6 +102,14 @@ def add_badge(lines, target, token=TOKEN, definition_start=DEFINITION_START, ima
     return lines
 
 
+def fisa_badge(addon_dir, addon_name, org, repo, branch):
+    """(imagine, target, alt) al badge-ului, sau None dacă modulul nu are fișă consultant."""
+    if not os.path.isfile(os.path.join(addon_dir, FISA_PATH)):
+        return None
+    target = f"https://github.com/{org}/{repo}/blob/{branch}/{addon_name}/readme/FISA_CONSULTANT.md"
+    return IMAGE, target, ALT
+
+
 def process_addon(addon_dir, addon_name, org, repo, branch):
     readme = os.path.join(addon_dir, "README.rst")
     if not os.path.isfile(readme):
@@ -109,9 +117,9 @@ def process_addon(addon_dir, addon_name, org, repo, branch):
     with open(readme, encoding="utf8") as f:
         original = f.read()
     lines = strip_badge(original.split("\n"))
-    if os.path.isfile(os.path.join(addon_dir, FISA_PATH)):
-        target = f"https://github.com/{org}/{repo}/blob/{branch}/{addon_name}/readme/FISA_CONSULTANT.md"
-        with_badge = add_badge(lines, target)
+    spec = fisa_badge(addon_dir, addon_name, org, repo, branch)
+    if spec:
+        with_badge = add_badge(lines, spec[1])
         if with_badge is None:
             sys.stderr.write(f"{addon_name}: README.rst fără linie de badge-uri, sărit\n")
             return False
