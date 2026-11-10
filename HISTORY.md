@@ -1,5 +1,11 @@
 # Istoric
 
+## 1.12.1
+
+- `tb-gen-index` și `tb-gen-docs`: insigna **Uniunea Europeană** din antet folosește steagul european ca SVG inline
+  (reproducerea oficială în culori de pe european-union.europa.eu, 12 stele aurii pe albastru), în
+  locul iconiței `fa-globe`.
+
 ## 1.12.0
 
 - Hook nou `tb-gen-docs`: generează `README.rst` (ca `tb-gen-readme`) și
