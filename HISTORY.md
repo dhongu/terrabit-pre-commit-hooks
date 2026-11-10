@@ -1,5 +1,23 @@
 # Istoric
 
+## 1.11.0
+
+- Hook nou `tb-gen-readme`: generează `README.rst` din fragmentele `readme/*.md` fără
+  `oca-gen-addon-readme`, în același format (șablonul Terrabit: badge-uri, autori,
+  contribuitori, changelog din `HISTORY.md`, footer), cu insignele „Fișă consultant” și
+  „teste automate” incluse direct. Până acum generatorul OCA rescria README.rst și ștergea
+  insignele puse de `tb-fisa-badge` / `tb-test-badge`, iar ordinea corectă exista doar într-un
+  comentariu din `.pre-commit-config.yaml`. Rulează pe `--files` (doar modulele atinse; un
+  `scripts/test_stats.json` schimbat le atinge pe toate) și, cu conversia pandoc în paralel,
+  face toată suita bitshop (118 module) în ~4 s, față de ~60 s la generatorul OCA.
+  Titlurile RST din fragmente se normalizează când docutils respinge README-ul („skip from
+  level 2 to 4”), la fel și imaginile pandoc duplicate (`|image1|`) sau cu `_` la sfârșit de
+  cuvânt în textul alternativ. `--no-roadmap` pentru suitele cu șablonul fără ROADMAP
+  (bitshop, deltatech), `--update-digest` pentru a reînnoi digestul sursei (implicit se păstrează,
+  ca `--keep-source-digest`). Doar pentru suitele Terrabit; suitele OCA rămân pe generatorul OCA.
+- `tb_fisa_badge.fisa_badge` și `tb_test_badge.tests_badge` expun specificația insignei,
+  refolosită de `tb-gen-readme`; hook-urile `tb-fisa-badge` și `tb-test-badge` rămân neschimbate.
+
 ## 1.10.0
 
 - `tb-gen-index`: două insigne noi în antetul paginii Apps Store, cu aceleași reguli ca

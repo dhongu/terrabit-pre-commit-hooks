@@ -61,6 +61,14 @@ def badge_target(stats, org, repo, branch, addon_name):
     return f"https://github.com/{org}/{repo}/tree/{branch}/{addon_name}/tests"
 
 
+def tests_badge(stats, org, repo, branch, addon_name):
+    """(imagine, target, alt) al badge-ului, sau None dacă modulul nu are teste."""
+    text = badge_text(stats) if stats else None
+    if not text:
+        return None
+    return shields_url(text), badge_target(stats, org, repo, branch, addon_name), text
+
+
 def process_addon(addon_dir, addon_name, stats, org, repo, branch):
     readme = os.path.join(addon_dir, "README.rst")
     if not os.path.isfile(readme):
