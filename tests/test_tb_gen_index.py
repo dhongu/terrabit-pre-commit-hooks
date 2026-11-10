@@ -43,6 +43,50 @@ class TestHostingBadge(unittest.TestCase):
             self.assertIn("Odoo Online &bull; Odoo.sh", badges)
 
 
+class TestLanguageAndEuBadges(unittest.TestCase):
+    """Insignele de limbi și UE din antet (aceleași reguli ca bannerul, 10.11.2026)."""
+
+    def _addon(self, po_files=None, banner=None):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(tmp))
+        os.makedirs(os.path.join(tmp, "i18n"))
+        for lang, (done, total) in (po_files or {}).items():
+            body = 'msgid ""\nmsgstr ""\n"Language: %s\\n"\n\n' % lang
+            for i in range(total):
+                body += 'msgid "Term %d"\nmsgstr "%s"\n\n' % (i, "T%d" % i if i < done else "")
+            with open(os.path.join(tmp, "i18n", lang + ".po"), "w", encoding="utf-8") as handle:
+                handle.write(body)
+        if banner is not None:
+            os.makedirs(os.path.join(tmp, "static", "description"))
+            with open(os.path.join(tmp, "static", "description", "banner.json"), "w", encoding="utf-8") as handle:
+                handle.write(banner)
+        return tmp
+
+    def test_only_languages_over_threshold(self):
+        addon = self._addon({"ro": (10, 10), "de": (9, 10), "fr": (8, 10)})
+        self.assertEqual(tb_gen_index.shipped_languages(addon), ["en", "ro", "de"])
+
+    def test_fuzzy_does_not_count(self):
+        addon = self._addon()
+        with open(os.path.join(addon, "i18n", "it.po"), "w", encoding="utf-8") as handle:
+            handle.write('msgid ""\nmsgstr ""\n\n#, fuzzy\nmsgid "A"\nmsgstr "B"\n\nmsgid "C"\nmsgstr "D"\n')
+        self.assertEqual(tb_gen_index.po_coverage(os.path.join(addon, "i18n", "it.po")), 50.0)
+
+    def test_language_badge_needs_three_languages(self):
+        two = tb_gen_index.build_badges(MANIFEST, "en", languages=["en", "ro"])
+        self.assertNotIn("fa-language", two)
+        three = tb_gen_index.build_badges(MANIFEST, "en", languages=["en", "ro", "de"])
+        self.assertIn("EN &middot; RO &middot; DE", three)
+
+    def test_eu_badge_from_banner_json(self):
+        self.assertTrue(tb_gen_index.is_eu(self._addon(banner='{"eu": true, "lang": "en"}')))
+        self.assertFalse(tb_gen_index.is_eu(self._addon(banner='{"title": "X"}')))
+        self.assertFalse(tb_gen_index.is_eu(self._addon()))
+        self.assertIn("European Union", tb_gen_index.build_badges(MANIFEST, "en", eu=True))
+        self.assertIn("Uniunea European&#259;", tb_gen_index.build_badges(MANIFEST, "ro", eu=True))
+        self.assertNotIn("fa-globe", tb_gen_index.build_badges(MANIFEST, "en"))
+
+
 class TestStoreDesign(unittest.TestCase):
     """Elementele preluate de pe paginile bune din store (09.11.2026)."""
 
