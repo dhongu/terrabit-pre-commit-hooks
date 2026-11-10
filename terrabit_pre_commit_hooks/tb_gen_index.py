@@ -188,13 +188,12 @@ I18N = {
         "cross_body": "Other modules from the same publisher, built to work together.",
         "cross_all": "All apps &rarr;",
         "deps_title": "What the price includes",
-        "deps_intro_own": "The price of this module on Odoo Apps, <strong>%(total)s</strong>, already includes the "
-        "modules it needs: Odoo Apps adds them to the same order, so you pay once. The module itself costs "
-        "%(own)s.",
-        "deps_intro_free": "This module is free; its price on Odoo Apps, <strong>%(total)s</strong>, is the price "
-        "of the modules it needs, added to the same order.",
+        "deps_intro_own": "Odoo Apps adds the paid modules this one needs to the same order, so the price shown "
+        "at the top of this page is the total for all of them. You pay once.",
+        "deps_intro_free": "This module is free. The price shown at the top of this page is that of the paid "
+        "modules it needs, which Odoo Apps adds to the same order.",
         "deps_auto": "It installs itself once these modules are present, so it is not charged separately.",
-        "deps_free_price": "free",
+        "deps_free_price": "Free",
         "deps_own_row": "This module",
         "deps_total_row": "Price on Odoo Apps",
         "badge_hosting": "Odoo.sh &bull; On-premise",
@@ -249,13 +248,12 @@ I18N = {
         "cross_body": "Alte module de la acela&#537;i editor, construite s&#259; lucreze &#238;mpreun&#259;.",
         "cross_all": "Toate aplica&#539;iile &rarr;",
         "deps_title": "Ce include prețul",
-        "deps_intro_own": "Prețul acestui modul pe Odoo Apps, <strong>%(total)s</strong>, include deja modulele de "
-        "care are nevoie: Odoo Apps le adaugă în aceeași comandă, deci plătiți o singură dată. Modulul propriu-zis "
-        "costă %(own)s.",
-        "deps_intro_free": "Modulul e gratuit; prețul lui pe Odoo Apps, <strong>%(total)s</strong>, e prețul "
-        "modulelor de care are nevoie, adăugate în aceeași comandă.",
+        "deps_intro_own": "Odoo Apps adaugă în aceeași comandă modulele plătite de care are nevoie acesta, deci "
+        "prețul din partea de sus a paginii e totalul pentru toate. Plătiți o singură dată.",
+        "deps_intro_free": "Modulul e gratuit. Prețul din partea de sus a paginii e al modulelor plătite de care "
+        "are nevoie, pe care Odoo Apps le adaugă în aceeași comandă.",
         "deps_auto": "Se instalează singur când modulele de mai jos sunt prezente, deci nu se taxează separat.",
-        "deps_free_price": "gratuit",
+        "deps_free_price": "Gratuit",
         "deps_own_row": "Acest modul",
         "deps_total_row": "Preț pe Odoo Apps",
         "badge_hosting": "Odoo.sh &bull; Instalare local&#259; (on-premise)",
@@ -546,6 +544,22 @@ DEPS_ROW = """  <a href="https://apps.odoo.com/apps/modules/%(series)s/%(tech)s"
     </span>
     <span class="fw-bold flex-shrink-0 text-end" style="font-size:16px;white-space:nowrap;">%(price)s</span>
   </a>
+"""
+# Primul rând: modulul însuși (fără link, e pagina curentă), cu eticheta „This module”, ca rândurile
+# să se adune vizual la totalul de jos. La modulele gratuite prețul apare ca „free”.
+DEPS_OWN_ROW = """  <div class="d-flex align-items-center border rounded-3 p-3 mb-2" style="color:%(body)s;background-color:#F6F8F7;">
+    <span class="d-inline-block position-relative me-3 flex-shrink-0" style="width:40px;height:40px;">
+      <span class="d-inline-block text-center fw-bold rounded"
+            style="width:40px;height:40px;line-height:40px;font-size:14px;color:#ffffff;background-color:%(primary)s;">%(initials)s</span>
+      <img src="https://apps.odoocdn.com/apps/assets/%(series)s/%(tech)s/icon.png" alt="" loading="lazy"
+           class="position-absolute top-0 start-0 rounded" style="width:40px;height:40px;border:none;background-color:#ffffff;"/>
+    </span>
+    <span class="flex-grow-1 me-3">
+      <span class="d-block text-uppercase fw-semibold" style="font-size:12px;letter-spacing:.06em;color:%(muted)s;">%(deps_own_row)s</span>
+      <span class="d-block fw-semibold" style="font-size:16px;line-height:1.25;">%(name)s</span>
+    </span>
+    <span class="fw-bold flex-shrink-0 text-end" style="font-size:16px;white-space:nowrap;">%(price)s</span>
+  </div>
 """
 DEPS_TOTAL = """  <div class="d-flex justify-content-between px-3 pt-2" style="color:%(body)s;font-size:16px;">
     <span class="fw-semibold">%(deps_total_row)s</span><span class="fw-bold">%(total)s</span>
@@ -1326,7 +1340,18 @@ def build_dependencies(addon_dir, manifest, lang="en"):
     intro = (strings["deps_intro_own"] if own else strings["deps_intro_free"]) % values
     if manifest.get("auto_install") and not own:
         intro += " " + strings["deps_auto"]
-    rows = []
+    own_tech = os.path.basename(os.path.abspath(addon_dir))
+    rows = [
+        DEPS_OWN_ROW
+        % dict(
+            strings,
+            series=_series(manifest),
+            tech=own_tech,
+            initials=_initials(manifest.get("name") or own_tech),
+            name=html_mod.escape(manifest.get("name") or own_tech),
+            price=_money(own, manifest) if own else strings["deps_free_price"],
+        )
+    ]
     for tech, man in deps:
         rows.append(
             DEPS_ROW

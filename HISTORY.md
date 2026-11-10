@@ -1,5 +1,11 @@
 # Istoric
 
+## 1.12.3
+
+- `tb-gen-index` și `tb-gen-docs`: în **What the price includes**, modulul însuși e primul rând
+  (eticheta „This module”, prețul lui sau „Free”), urmat de dependențele plătite, astfel încât
+  rândurile se adună la totalul „Price on Odoo Apps”. Fraza de deasupra nu mai repetă prețurile.
+
 ## 1.12.2
 
 - `tb-gen-index` și `tb-gen-docs`: secțiunea **What the price includes** (prețul cu dependențele

@@ -130,13 +130,13 @@ if __name__ == "__main__":
 class TestDependenciesPosition(unittest.TestCase):
     """„What the price includes” stă deasupra taburilor, sub cererea de rating (1.12.2)."""
 
-    def _suite(self):
+    def _suite(self, main_price=220):
         tmp = tempfile.mkdtemp()
         self.addCleanup(lambda: __import__("shutil").rmtree(tmp))
         suite = os.path.join(tmp, "suite")
         for name, manifest in (
             ("tb_base", dict(MANIFEST, name="Base", price=10, currency="EUR")),
-            ("tb_main", dict(MANIFEST, name="Main", price=220, currency="EUR", depends=["tb_base"])),
+            ("tb_main", dict(MANIFEST, name="Main", price=main_price, currency="EUR", depends=["tb_base"])),
         ):
             os.makedirs(os.path.join(suite, name, "readme"))
             with open(os.path.join(suite, name, "__manifest__.py"), "w", encoding="utf-8") as handle:
@@ -151,3 +151,16 @@ class TestDependenciesPosition(unittest.TestCase):
         deps = html.index("What the price includes")
         self.assertLess(html.index("Happy with this module?"), deps)
         self.assertLess(deps, html.index('<ul class="nav nav-pills'))
+
+    def test_module_is_first_row(self):
+        """Modulul însuși e primul rând, ca rândurile să se adune la total (1.12.3)."""
+        html = tb_gen_index.gen_index(self._suite(), cross_sell=False)
+        own = html.index("This module")
+        self.assertLess(own, html.index(">Base<"))
+        self.assertIn("220 &euro;", html[own : html.index(">Base<")])
+        self.assertIn("230 &euro;", html[html.index("Price on Odoo Apps") :])
+
+    def test_free_module_row(self):
+        html = tb_gen_index.gen_index(self._suite(main_price=0), cross_sell=False)
+        own = html.index("This module")
+        self.assertIn("Free", html[own : html.index(">Base<")])
