@@ -1,5 +1,16 @@
 # Istoric
 
+## 1.11.1
+
+- `tb-gen-readme`: verificarea docutils se face sub lacăt. Rulată din fire paralele, dădea
+  erori false („Definition list ends without a blank line”, „skip from level 2 to 4”) pe
+  module valide, deci rezultatul depindea de ordinea firelor.
+- `tb-gen-readme`: titlurile din `DESCRIPTION.md` (care stă înaintea secțiunilor README-ului)
+  nu mai sparg ierarhia: când README-ul nu trece de docutils, devin text îngroșat; titlurile
+  cu linie de `===` / `---` dedesubt (setext) sunt recunoscute și normalizate ca cele cu `#`.
+  Modulele cu titluri în DESCRIPTION (ex. `deltatech_delivery`, `deltatech_valuation_area`),
+  care picau și la generatorul OCA, se generează acum corect.
+
 ## 1.11.0
 
 - Hook nou `tb-gen-readme`: generează `README.rst` din fragmentele `readme/*.md` fără
