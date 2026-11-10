@@ -19,7 +19,8 @@ după badge-urile OCA vin direct ``|badge_fisa|`` (modul cu ``readme/FISA_CONSUL
   (``gfm-raw_html-gfm_auto_identifiers``); fragmentele ``.rst`` intră ca atare;
 - titlurile din fragmente se normalizează: dacă README-ul generat nu trece de docutils
   („Inconsistent title style: skip from level 2 to 4”), titlurile fiecărui fragment se
-  refac relativ la titlul secțiunii, fără niveluri sărite; în același pas imaginile pandoc
+  refac relativ la titlul secțiunii, fără niveluri sărite (titlurile din DESCRIPTION, care
+  stă înaintea secțiunilor, devin text îngroșat); în același pas imaginile pandoc
   (``|image1|``) primesc prefixul fragmentului, iar ``_`` de la sfârșit de cuvânt din textul
   alternativ dispare (altfel docutils pică pe „Duplicate substitution” / „Undefined
   substitution”); README-urile valide rămân neatinse;
@@ -50,6 +51,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 from urllib.parse import urljoin
 
 from terrabit_pre_commit_hooks.tb_fisa_badge import fisa_badge, repo_from_git
@@ -295,10 +297,48 @@ HEADING = re.compile(r"^(#{1,6})([ \t]+.*)$")
 FENCE = re.compile(r"^ {0,3}(```|~~~)")
 
 
+SETEXT = re.compile(r"^(=+|-+)[ \t]*$")
+
+
+def setext_to_atx(markdown):
+    """Titlurile cu linie de ``===`` / ``---`` dedesubt devin ``#`` / ``##``, ca să le vadă normalizarea."""
+    lines = markdown.split("\n")
+    out, fence, index = [], None, 0
+    while index < len(lines):
+        line = lines[index]
+        match = FENCE.match(line)
+        if match:
+            marker = match.group(1)
+            fence = None if fence == marker else (fence or marker)
+        underline = SETEXT.match(lines[index + 1]) if index + 1 < len(lines) else None
+        plain = line.strip() and not line.startswith((" ", "\t", "#", ">", "-", "*", "+", "|", "`", "~")) and not line[0].isdigit()
+        if underline and plain and not fence and not match:
+            out.append(("#" if underline.group(1)[0] == "=" else "##") + " " + line.strip())
+            index += 2
+            continue
+        out.append(line)
+        index += 1
+    return "\n".join(out)
+
+
+def headings_to_bold(markdown):
+    """Titlurile din DESCRIPTION (înaintea secțiunilor README-ului) devin text îngroșat: orice
+    stil de titlu de acolo ar sparge ierarhia secțiunilor care urmează."""
+    out, fence = [], None
+    for line in setext_to_atx(markdown).split("\n"):
+        match = FENCE.match(line)
+        if match:
+            marker = match.group(1)
+            fence = None if fence == marker else (fence or marker)
+        heading = None if fence or match else HEADING.match(line)
+        out.append(f"**{heading.group(2).strip()}**" if heading else line)
+    return "\n".join(out)
+
+
 def normalize_headings(markdown):
     """Titlurile ATX fără niveluri sărite, relativ la titlul secțiunii (nivel 2 în md)."""
     out, fence, previous = [], None, 0
-    for line in markdown.split("\n"):
+    for line in setext_to_atx(markdown).split("\n"):
         match = FENCE.match(line)
         if match:
             marker = match.group(1)
@@ -390,7 +430,8 @@ def load_fragments(addon_dir, addon_name, org, repo, branch, normalize):
             content = f.read()
         if ext == ".md":
             if normalize:
-                content = sanitize_image_alts(normalize_headings(content))
+                fix = headings_to_bold if name == "DESCRIPTION" else normalize_headings
+                content = sanitize_image_alts(fix(content))
             content = markdown_to_rst(content, level)
         if normalize:
             content = prefix_substitutions(content, name.lower())
@@ -462,22 +503,28 @@ def render(addon_dir, addon_name, manifest, digest, org, repo, branch, stats, ro
     )
 
 
+# docutils își ține registrele (directive, roluri) global: verificările din fire paralele
+# dădeau erori false („Definition list ends without a blank line”), deci se fac pe rând.
+RST_LOCK = threading.Lock()
+
+
 def check_rst(text):
     """Mesajul de eroare docutils (titluri inconsistente etc.), sau None dacă README-ul e valid."""
     from docutils.core import publish_doctree
     from docutils.utils import SystemMessage
 
     try:
-        publish_doctree(
-            text,
-            settings_overrides={
-                "file_insertion_enabled": False,
-                "raw_enabled": False,
-                "halt_level": 2,
-                "report_level": 5,
-                "warning_stream": io.StringIO(),
-            },
-        )
+        with RST_LOCK:
+            publish_doctree(
+                text,
+                settings_overrides={
+                    "file_insertion_enabled": False,
+                    "raw_enabled": False,
+                    "halt_level": 2,
+                    "report_level": 5,
+                    "warning_stream": io.StringIO(),
+                },
+            )
     except SystemMessage as error:
         return str(error).splitlines()[0]
     return None

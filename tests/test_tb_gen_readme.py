@@ -112,6 +112,21 @@ class TestGenReadme(unittest.TestCase):
         self.assertIsNone(tb_gen_readme.check_rst(self.readme()))
         self.assertIn("Setup\n-----", self.readme())
 
+    def test_description_headings_do_not_break_sections(self):
+        write(
+            os.path.join(self.addon, "readme", "DESCRIPTION.md"),
+            "Intro.\n\nOverview\n--------\n\nText.\n\n### Detail\n\nMore.\n",
+        )
+        write(os.path.join(self.addon, "readme", "USAGE.md"), "### Setup\n\nText.\n\n##### Deep\n\nMore.\n")
+        self.assertEqual(self.run_hook(), 0)
+        text = self.readme()
+        self.assertIsNone(tb_gen_readme.check_rst(text))
+        self.assertIn("**Overview**", text)
+        self.assertIn("Usage\n=====", text)
+
+    def test_setext_to_atx(self):
+        self.assertEqual(tb_gen_readme.setext_to_atx("Title\n=====\n\nSub\n---\n\n- item\n---\n"), "# Title\n\n## Sub\n\n- item\n---\n")
+
     def test_valid_titles_are_left_alone(self):
         """README-ul care trece de docutils nu trece prin normalizare (ca să nu apară diferențe)."""
         write(os.path.join(self.addon, "readme", "USAGE.md"), "## Setup\n\nText.\n\n### Deep\n\nMore.\n")
