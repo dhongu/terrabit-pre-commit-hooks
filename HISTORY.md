@@ -1,5 +1,19 @@
 # Istoric
 
+## 1.12.0
+
+- Hook nou `tb-gen-docs`: generează `README.rst` (ca `tb-gen-readme`) și
+  `static/description/index.html` (ca `tb-gen-index`) într-o singură trecere pe modul, cu
+  aceleași fragmente, manifest, statistici de teste și selecție de module pe `--files`. În
+  `.pre-commit-config.yaml` rămâne `tb-test-stats` urmat de `tb-gen-docs`, fără alte
+  ordini de ținut minte. Opțiunile README-ului (`--org-name`, `--repo-name`, `--branch`,
+  `--no-roadmap`, `--update-digest`) și ale paginii (`--lang`, `--allow-ro`, `--scope-note`,
+  `--no-cross-sell`, `--force`) se dau la fel ca la hook-urile separate; `--no-readme` /
+  `--no-index` sar peste una dintre ele. Rezultatul e byte cu byte cel al hook-urilor
+  separate, care rămân disponibile neschimbate.
+- `tb_module_sources.py`: stratul comun (modulele instalabile, selecția pe fișiere, statisticile
+  din `scripts/test_stats.json`, org/repo din remote), folosit de `tb-gen-readme` și `tb-gen-docs`.
+
 ## 1.11.1
 
 - `tb-gen-readme`: verificarea docutils se face sub lacăt. Rulată din fire paralele, dădea

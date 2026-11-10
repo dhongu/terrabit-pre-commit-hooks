@@ -41,11 +41,9 @@ Rulare::
 """
 
 import argparse
-import ast
 import concurrent.futures
 import hashlib
 import io
-import json
 import os
 import re
 import shutil
@@ -54,8 +52,14 @@ import sys
 import threading
 from urllib.parse import urljoin
 
-from terrabit_pre_commit_hooks.tb_fisa_badge import fisa_badge, repo_from_git
-from terrabit_pre_commit_hooks.tb_gen_index import TEST_STATS
+from terrabit_pre_commit_hooks.tb_fisa_badge import fisa_badge
+from terrabit_pre_commit_hooks.tb_module_sources import (  # noqa: F401  (addons_from_files: API folosit de teste)
+    addons_from_files,
+    all_addons,
+    github_repo,
+    load_stats,
+    read_manifest,
+)
 from terrabit_pre_commit_hooks.tb_test_badge import tests_badge
 
 FRAGMENTS_DIR = "readme"
@@ -73,7 +77,6 @@ FRAGMENTS = {
     "HISTORY": 2,
 }
 PANDOC_FORMAT = "gfm-raw_html-gfm_auto_identifiers"
-MANIFEST_NAMES = ("__manifest__.py", "__openerp__.py", "__terp__.py")
 
 LICENSE_BADGES = {
     "AGPL-3": (
@@ -241,15 +244,6 @@ class ReadmeError(Exception):
 
 
 # --- surse -----------------------------------------------------------------------------------
-
-
-def read_manifest(addon_dir):
-    for name in MANIFEST_NAMES:
-        path = os.path.join(addon_dir, name)
-        if os.path.isfile(path):
-            with open(path, encoding="utf8") as f:
-                return path, ast.literal_eval(f.read())
-    return None, None
 
 
 def source_digest(manifest_path, addon_dir):
@@ -552,29 +546,6 @@ def generate(addon_dir, addon_name, manifest, org, repo, branch, stats, roadmap=
 # --- hook -----------------------------------------------------------------------------------
 
 
-def addons_from_files(addons_dir, files):
-    """Modulele atinse de fișierele date; un fișier din ``scripts/`` (statistici) le atinge pe toate."""
-    names = set()
-    root = os.path.abspath(addons_dir)
-    for file in files:
-        rel = os.path.relpath(os.path.abspath(file), root)
-        top = rel.split(os.sep, 1)[0]
-        if top == "scripts":
-            return None
-        if top != os.pardir:
-            names.add(top)
-    return names
-
-
-def all_addons(addons_dir):
-    for name in sorted(os.listdir(addons_dir)):
-        addon_dir = os.path.join(addons_dir, name)
-        if os.path.isdir(addon_dir):
-            manifest = read_manifest(addon_dir)[1]
-            if manifest is not None and manifest.get("installable", True):
-                yield name, addon_dir, manifest
-
-
 def process_addon(addon_dir, addon_name, manifest, org, repo, branch, stats, **options):
     text = generate(addon_dir, addon_name, manifest, org, repo, branch, stats, **options)
     if text is None:
@@ -589,59 +560,54 @@ def process_addon(addon_dir, addon_name, manifest, org, repo, branch, stats, **o
     return True
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("files", nargs="*", help="fișierele date de pre-commit; fără ele, toate modulele")
-    parser.add_argument("--addons-dir", default=".")
-    parser.add_argument("--org-name", help="organizația GitHub (implicit: din remote-ul origin)")
-    parser.add_argument("--repo-name", help="repo-ul GitHub (implicit: din remote-ul origin)")
-    parser.add_argument("--branch", default="19.0")
-    parser.add_argument("--no-roadmap", action="store_true", help="fără secțiunea ROADMAP (șablonul bitshop/deltatech)")
-    parser.add_argument("--update-digest", action="store_true", help="reînnoiește digestul sursei din antet")
-    args = parser.parse_args(argv)
-
-    org, repo = args.org_name, args.repo_name
-    if not (org and repo):
-        git_org, git_repo = repo_from_git(args.addons_dir)
-        org, repo = org or git_org, repo or git_repo
-    if not (org and repo):
-        parser.error("nu pot determina repo-ul GitHub: dați --org-name și --repo-name")
-
-    selected = addons_from_files(args.addons_dir, args.files) if args.files else None
-    addons = [a for a in all_addons(args.addons_dir) if selected is None or a[0] in selected]
-
-    stats = {}
-    stats_path = os.path.join(args.addons_dir, TEST_STATS)
-    if os.path.isfile(stats_path):
-        with open(stats_path, encoding="utf8") as f:
-            stats = json.load(f).get("addons", {})
+def run(addons, org, repo, branch, stats, roadmap=True, update_digest=False):
+    """Generează README.rst pentru modulele date, în fire paralele; (module schimbate, nr. de eșecuri)."""
 
     def work(addon):
         name, addon_dir, manifest = addon
         try:
             changed = process_addon(
-                addon_dir,
-                name,
-                manifest,
-                org,
-                repo,
-                args.branch,
-                stats.get(name),
-                roadmap=not args.no_roadmap,
-                update_digest=args.update_digest,
+                addon_dir, name, manifest, org, repo, branch, stats.get(name), roadmap=roadmap, update_digest=update_digest
             )
             return name, changed, None
         except ReadmeError as error:
             return name, False, str(error)
 
-    failed = 0
+    changed_names, failed = [], 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 4)) as pool:
         for name, changed, error in pool.map(work, addons):
             if error:
                 failed += 1
                 sys.stderr.write(f"{name}: {error}\n")
             elif changed:
+                changed_names.append(name)
                 sys.stdout.write(f"{name}: README.rst actualizat\n")
+    return changed_names, failed
+
+
+def add_readme_arguments(parser):
+    """Opțiunile README-ului, comune cu ``tb-gen-docs``."""
+    parser.add_argument("--org-name", help="organizația GitHub (implicit: din remote-ul origin)")
+    parser.add_argument("--repo-name", help="repo-ul GitHub (implicit: din remote-ul origin)")
+    parser.add_argument("--branch", default="19.0")
+    parser.add_argument("--no-roadmap", action="store_true", help="fără secțiunea ROADMAP (șablonul bitshop/deltatech)")
+    parser.add_argument("--update-digest", action="store_true", help="reînnoiește digestul sursei din antet")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("files", nargs="*", help="fișierele date de pre-commit; fără ele, toate modulele")
+    parser.add_argument("--addons-dir", default=".")
+    add_readme_arguments(parser)
+    args = parser.parse_args(argv)
+
+    org, repo = github_repo(args.addons_dir, args.org_name, args.repo_name)
+    if not (org and repo):
+        parser.error("nu pot determina repo-ul GitHub: dați --org-name și --repo-name")
+    addons = list(all_addons(args.addons_dir, args.files))
+    _changed, failed = run(
+        addons, org, repo, args.branch, load_stats(args.addons_dir), not args.no_roadmap, args.update_digest
+    )
     return 1 if failed else 0
 
 
