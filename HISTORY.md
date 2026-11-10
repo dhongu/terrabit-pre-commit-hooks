@@ -1,5 +1,12 @@
 # Istoric
 
+## 1.12.2
+
+- `tb-gen-index` și `tb-gen-docs`: secțiunea **What the price includes** (prețul cu dependențele
+  plătite) stă deasupra taburilor, imediat sub cererea de rating, nu după conținutul lor. Pe
+  modulele cu Overview lung ajungea la sfârșitul paginii, iar cumpărătorul vedea prețul total din
+  antetul Apps fără explicația lui. Modulele fără dependențe plătite nu se schimbă.
+
 ## 1.12.1
 
 - `tb-gen-index` și `tb-gen-docs`: insigna **Uniunea Europeană** din antet folosește steagul european ca SVG inline

@@ -525,9 +525,10 @@ CROSS_SELL_CLOSE = "  </div>\n</section>\n"
 # Prețul real al unui modul care atrage după el alte module cu preț din aceeași suită: pe Apps Store
 # dependențele plătite intră automat în coș, deci cumpărătorul vede un total mai mare decât prețul
 # modulului. Lista are iconiță, nume (link spre Apps), descriere și preț; apare doar dacă există
-# cel puțin o dependență plătită, și pe module gratuite (punți auto_install).
+# cel puțin o dependență plătită, și pe module gratuite (punți auto_install). Stă deasupra taburilor,
+# sub cererea de rating, ca prețul total să se vadă din primul ecran, nu după tot conținutul taburilor.
 DEPS_OPEN = """
-<section class="rounded-4 p-4 mt-4 mb-3 border">
+<section class="rounded-4 p-4 mt-0 mb-4 border">
   <h2 class="fw-bold mb-2" style="font-size:20px;border:none;color:%(body)s;">%(deps_title)s</h2>
   <p class="mb-3" style="color:%(body)s;line-height:1.6;font-size:15px;">%(intro)s</p>
 """
@@ -1370,10 +1371,10 @@ def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=
         WRAP_OPEN,
         build_hero(addon_dir, manifest, lang),
         build_rating(manifest, lang),
+        build_dependencies(addon_dir, manifest, lang),
         build_tabs(tabs),
         build_stats(lang),
         (SUBSCRIPTION % strings) if manifest.get("price") else "",
-        build_dependencies(addon_dir, manifest, lang),
         (SCOPE_NOTE % strings) if scope_note else "",
         SUPPORT % strings,
         build_cross_sell(addon_dir, manifest, lang=lang) if cross_sell else "",
