@@ -951,8 +951,8 @@ def _eu_stars(style="margin-right:6px;"):
     """Steagul european ca SVG inline (nu depinde de fonturi), reproducerea oficială în culori."""
     stars = "".join(f'<polygon points="{pts}"/>' for pts in EU_FLAG_STARS)
     return (
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 294.95 200.41" width="18" height="12" '
-        f'role="img" aria-label="EU" style="vertical-align:-1px;{style}"><rect width="294.95" height="200.41" '
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 294.95 200.41" width="24" height="16" '
+        f'role="img" aria-label="EU" style="vertical-align:-3px;{style}"><rect width="294.95" height="200.41" '
         f'fill="#fff"/><rect x="5.67" y="5.67" width="283.6" height="189.07" fill="#039"/>'
         f'<g fill="#fc0">{stars}</g></svg>'
     )
