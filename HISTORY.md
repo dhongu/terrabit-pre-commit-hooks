@@ -1,5 +1,10 @@
 # Istoric
 
+## 1.13.1
+
+- `tb-gen-index` și `tb-gen-docs`: steagul UE din insigna „European Union” are 24×16 px (era 18×12),
+  cu aliniere verticală potrivită textului insignei.
+
 ## 1.12.3
 
 - `tb-gen-index` și `tb-gen-docs`: în **What the price includes**, modulul însuși e primul rând

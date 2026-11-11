@@ -86,6 +86,7 @@ class TestLanguageAndEuBadges(unittest.TestCase):
         self.assertIn("Uniunea European&#259;", tb_gen_index.build_badges(MANIFEST, "ro", eu=True))
         self.assertNotIn("fa-globe", tb_gen_index.build_badges(MANIFEST, "en", eu=True))
         self.assertEqual(tb_gen_index.build_badges(MANIFEST, "en", eu=True).count("<polygon"), 12)
+        self.assertIn('width="24" height="16"', tb_gen_index.build_badges(MANIFEST, "en", eu=True))
         self.assertNotIn("<svg", tb_gen_index.build_badges(MANIFEST, "en"))
 
 
