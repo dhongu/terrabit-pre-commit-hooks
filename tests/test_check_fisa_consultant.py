@@ -47,10 +47,17 @@ class TestCheckFisaConsultant(unittest.TestCase):
     def git(self, *args):
         subprocess.run(["git", *args], cwd=self.repo, env=ENV, check=True)
 
-    def module(self, name, fisa=False, installable=True):
+    def module(self, name, fisa=False, installable=True, sheet=None, screenshots=False):
         os.makedirs(os.path.join(self.repo, name, "readme"))
+        manifest = {"name": name, "installable": installable}
+        if sheet is not None:
+            manifest["consultant_sheet"] = sheet
         with open(os.path.join(self.repo, name, "__manifest__.py"), "w") as f:
-            f.write(repr({"name": name, "installable": installable}))
+            f.write(repr(manifest))
+        if screenshots:
+            os.makedirs(os.path.join(self.repo, name, "readme", "screenshots"))
+            with open(os.path.join(self.repo, name, "readme", "screenshots", "a.png"), "w") as f:
+                f.write("x")
         if fisa:
             with open(os.path.join(self.repo, name, "readme", "FISA_CONSULTANT.md"), "w") as f:
                 f.write("# Fisa\n")
@@ -86,6 +93,59 @@ class TestCheckFisaConsultant(unittest.TestCase):
         result = self.run_hook("nou")
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
+
+    def test_sheet_none_nou_fara_fisa_trece(self):
+        self.module("nou", sheet="none")
+        self.git("add", "nou")
+        result = self.run_hook("nou")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(result.stdout, "")
+
+    def test_sheet_none_existent_nu_e_listat(self):
+        self.module("tehnic", sheet="none")
+        self.git("add", "tehnic")
+        self.git("commit", "-q", "-m", "tehnic")
+        result = self.run_hook("tehnic")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
+    def test_sheet_none_cu_fisa_avertizeaza(self):
+        self.module("tehnic", fisa=True, sheet="none")
+        result = self.run_hook("tehnic")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("sheet=none", result.stdout.replace("consultant_", ""))
+
+    def test_sheet_full_nou_fara_fisa_pica(self):
+        self.module("nou", sheet="full")
+        self.git("add", "nou")
+        self.assertEqual(self.run_hook("nou").returncode, 1)
+
+    def test_sheet_full_fara_capturi_avertizeaza(self):
+        self.module("nou", fisa=True, sheet="full")
+        self.git("add", "nou")
+        result = self.run_hook("nou")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("capturi", result.stdout)
+
+    def test_sheet_full_cu_capturi_trece_curat(self):
+        self.module("nou", fisa=True, sheet="full", screenshots=True)
+        self.git("add", "nou")
+        result = self.run_hook("nou")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
+    def test_sheet_simple_fara_capturi_trece_curat(self):
+        self.module("nou", fisa=True, sheet="simple")
+        self.git("add", "nou")
+        result = self.run_hook("nou")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
+    def test_sheet_invalid_pica(self):
+        self.module("vechi_fara_fisa2", sheet="complet")
+        result = self.run_hook("vechi_fara_fisa2")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("invalida", result.stdout)
 
     def test_repo_fara_commit(self):
         """Repo fara commit (HEAD inexistent): toate modulele sunt noi."""
