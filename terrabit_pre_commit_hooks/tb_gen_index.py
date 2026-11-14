@@ -35,6 +35,8 @@ Structura paginii (doar EN):
   manifest) + badge-uri din manifest
   (versiune, categorie, găzduire, licență) | panou cu teste și bara de acoperire din
   scripts/test_stats.json (panoul lipsește la modulele fără teste)
+  DEMO: static/description/en/demo.gif (pagina RO: demo.gif, altfel en/demo.gif), sub hero,
+  dacă există — GIF-ul animat făcut de `capture_gif` (deltatech_doc_screenshots)
   NAV-PILLS cu taburi: Overview / Presentation / Configuration / Usage / Română / Versions
     - Overview      = DESCRIPTION.md (+ CONTEXT.md la final); listele de funcții cu
                       ≥3 itemi devin carduri Bootstrap cu bifă verde. Dacă modulul
@@ -210,6 +212,7 @@ I18N = {
         "rating_free_body": "It is free, built and maintained by the Terrabit developers. If it saved you time, "
         "a rating on this page is the best way to say thanks &mdash; and it helps other Odoo users find it too. "
         "Thank you for your support!",
+        "demo_alt": "Animated demo of the module",
         "rating_paid_title": "Happy with this module?",
         "rating_paid_body": "A rating on this page helps other Odoo users find it and tells our developers "
         "what works. Thank you!",
@@ -270,6 +273,7 @@ I18N = {
         "rating_free_body": "E gratuit, construit &#537;i &#238;ntre&#539;inut de programatorii Terrabit. Dac&#259; v-a economisit timp, "
         "un rating pe aceast&#259; pagin&#259; e cel mai bun mod de a ne mul&#539;umi &mdash; &#537;i &#238;i ajut&#259; pe al&#539;i utilizatori Odoo s&#259; &#238;l g&#259;seasc&#259;. "
         "V&#259; mul&#539;umim pentru sprijin!",
+        "demo_alt": "Demonstra&#539;ie animat&#259; a modulului",
         "rating_paid_title": "Sunte&#539;i mul&#539;umit de acest modul?",
         "rating_paid_body": "Un rating pe aceast&#259; pagin&#259; &#238;i ajut&#259; pe al&#539;i utilizatori Odoo s&#259; &#238;l g&#259;seasc&#259; &#537;i le arat&#259; "
         "programatorilor no&#537;tri ce func&#539;ioneaz&#259; bine. V&#259; mul&#539;umim!",
@@ -1075,6 +1079,36 @@ def build_hero(addon_dir, manifest, lang="en"):
     )
 
 
+# GIF-ul demo al modulului (generat de `capture_gif` din deltatech_doc_screenshots), imediat
+# sub hero: primul lucru văzut după antet, ca un video de prezentare. Cale relativă la
+# index.html; Apps Store o rescrie spre CDN ca pe celelalte imagini din static/description/.
+DEMO = """
+<div class="rounded-4 border shadow-sm p-2 mb-4" style="background-color:#f4f8f4;">
+  <img class="img-fluid d-block mx-auto rounded-3" style="max-width:100%%;height:auto;" src="%(src)s" alt="%(alt)s" loading="lazy"/>
+</div>
+"""
+
+#: GIF-ul demo per limba paginii, în ordinea preferinței; pagina EN nu ia varianta RO
+#: (subtitrările ar fi în română), pagina RO ia varianta EN dacă lipsește cea RO
+DEMO_GIF = {"en": ("en/demo.gif",), "ro": ("demo.gif", "en/demo.gif")}
+
+
+def demo_gif(addon_dir, lang="en"):
+    """Calea (relativă la index.html) a GIF-ului demo pentru limba paginii, sau None."""
+    desc_dir = os.path.join(addon_dir, "static", "description")
+    for rel in DEMO_GIF.get(lang, DEMO_GIF["en"]):
+        if os.path.isfile(os.path.join(desc_dir, *rel.split("/"))):
+            return rel
+    return None
+
+
+def build_demo(addon_dir, lang="en"):
+    src = demo_gif(addon_dir, lang)
+    if not src:
+        return ""
+    return DEMO % {"src": src, "alt": I18N[lang]["demo_alt"]}
+
+
 def build_tab_sources(addon_dir, manifest, allow_ro=False, lang="en"):
     """Întoarce [(key, title, markdown)] doar pentru taburile cu fragment existent."""
     name = manifest.get("name") or ""
@@ -1395,6 +1429,7 @@ def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=
     parts = [
         WRAP_OPEN,
         build_hero(addon_dir, manifest, lang),
+        build_demo(addon_dir, lang),
         build_rating(manifest, lang),
         build_dependencies(addon_dir, manifest, lang),
         build_tabs(tabs),

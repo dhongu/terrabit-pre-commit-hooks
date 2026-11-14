@@ -1,5 +1,13 @@
 # Istoric
 
+## 1.14.0
+
+- `tb-gen-index` și `tb-gen-docs`: GIF-ul demo al modulului (`static/description/en/demo.gif`, făcut
+  de `capture_gif` din `deltatech_doc_screenshots`) apare automat sub hero, înaintea cererii de
+  rating, ca un video de prezentare. Pagina RO ia `demo.gif` (subtitrări în română), altfel
+  `en/demo.gif`; pagina EN nu ia niciodată varianta RO. Fără GIF, pagina nu se schimbă.
+- `tb-gen-docs` se declanșează și la modificarea unui `demo.gif`.
+
 ## 1.13.1
 
 - `tb-gen-index` și `tb-gen-docs`: steagul UE din insigna „European Union” are 24×16 px (era 18×12),
