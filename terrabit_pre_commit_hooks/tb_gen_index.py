@@ -35,10 +35,11 @@ Structura paginii (doar EN):
   manifest) + badge-uri din manifest
   (versiune, categorie, găzduire, licență) | panou cu teste și bara de acoperire din
   scripts/test_stats.json (panoul lipsește la modulele fără teste)
-  DEMO: static/description/en/demo.gif (pagina RO: demo.gif, altfel en/demo.gif), sub hero,
-  dacă există — GIF-ul animat făcut de `capture_gif` (deltatech_doc_screenshots)
   NAV-PILLS cu taburi: Overview / Presentation / Configuration / Usage / Română / Versions
-    - Overview      = DESCRIPTION.md (+ CONTEXT.md la final); listele de funcții cu
+    - Overview      = GIF-ul demo, primul sub titlu, dacă există (static/description/en/demo.gif;
+                      pagina RO: demo.gif, altfel en/demo.gif; îl face `capture_gif` din
+                      deltatech_doc_screenshots), apoi
+                      DESCRIPTION.md (+ CONTEXT.md la final); listele de funcții cu
                       ≥3 itemi devin carduri Bootstrap cu bifă verde. Dacă modulul
                       depinde (oricât de indirect, în aceeași suită) de un modul cu
                       readme/FRAMEWORK_FEATURES.md, fragmentul acela se anexează aici
@@ -1079,8 +1080,8 @@ def build_hero(addon_dir, manifest, lang="en"):
     )
 
 
-# GIF-ul demo al modulului (generat de `capture_gif` din deltatech_doc_screenshots), imediat
-# sub hero: primul lucru văzut după antet, ca un video de prezentare. Cale relativă la
+# GIF-ul demo al modulului (generat de `capture_gif` din deltatech_doc_screenshots), primul în
+# tabul Overview, imediat sub titlul lui, înaintea textului descrierii. Cale relativă la
 # index.html; Apps Store o rescrie spre CDN ca pe celelalte imagini din static/description/.
 DEMO = """
 <div class="rounded-4 border shadow-sm p-2 mb-4" style="background-color:#f4f8f4;">
@@ -1233,7 +1234,8 @@ EYEBROW = (
 )
 
 
-def build_tabs(tabs):
+def build_tabs(tabs, demo=""):
+    """Taburile paginii; ``demo`` (blocul GIF-ului) intră primul în Overview, sub titlul lui."""
     if not tabs:
         return ""
     panes = []
@@ -1243,6 +1245,9 @@ def build_tabs(tabs):
             # tabul se numește deja „Română”: titlul ar repeta numele tabului, iar
             # subtitlurile Prezentare / Configurare / Utilizare țin loc de titlu
             heading = ""
+        body = build_panel_body(key, md_text)
+        if key == "overview" and demo:
+            body = demo + body
         panes.append(
             PANEL
             % {
@@ -1250,7 +1255,7 @@ def build_tabs(tabs):
                 "key": key,
                 "heading": heading,
                 "body_color": BODY,
-                "body": build_panel_body(key, md_text),
+                "body": body,
             }
         )
     if len(tabs) == 1:
@@ -1429,10 +1434,9 @@ def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=
     parts = [
         WRAP_OPEN,
         build_hero(addon_dir, manifest, lang),
-        build_demo(addon_dir, lang),
         build_rating(manifest, lang),
         build_dependencies(addon_dir, manifest, lang),
-        build_tabs(tabs),
+        build_tabs(tabs, demo=build_demo(addon_dir, lang)),
         build_stats(lang),
         (SUBSCRIPTION % strings) if manifest.get("price") else "",
         (SCOPE_NOTE % strings) if scope_note else "",

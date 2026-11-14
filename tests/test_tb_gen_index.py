@@ -168,7 +168,7 @@ class TestDependenciesPosition(unittest.TestCase):
 
 
 class TestDemoGif(unittest.TestCase):
-    """GIF-ul demo (`capture_gif`) apare automat sub hero, înaintea cererii de rating (1.14.0)."""
+    """GIF-ul demo (`capture_gif`) apare primul în tabul Overview, sub titlul lui (1.14.0)."""
 
     def _addon(self, gifs=()):
         tmp = tempfile.mkdtemp()
@@ -177,18 +177,23 @@ class TestDemoGif(unittest.TestCase):
         with open(os.path.join(tmp, "__manifest__.py"), "w", encoding="utf-8") as handle:
             handle.write(repr(dict(MANIFEST, name="Demo", price=20, currency="EUR")))
         with open(os.path.join(tmp, "readme", "DESCRIPTION.md"), "w", encoding="utf-8") as handle:
-            handle.write("Text.\n")
+            handle.write("Description text.\n")
+        with open(os.path.join(tmp, "readme", "USAGE.md"), "w", encoding="utf-8") as handle:
+            handle.write("Usage text.\n")
         for rel in gifs:
             path = os.path.join(tmp, "static", "description", *rel.split("/"))
             os.makedirs(os.path.dirname(path), exist_ok=True)
             open(path, "wb").close()
         return tmp
 
-    def test_gif_between_hero_and_rating(self):
+    def test_gif_first_in_overview(self):
         html = tb_gen_index.gen_index(self._addon(["en/demo.gif"]), cross_sell=False)
         gif = html.index('src="en/demo.gif"')
-        self.assertLess(html.index(tb_gen_index.TB_MARKER), gif)
-        self.assertLess(gif, html.index("Happy with this module?"))
+        self.assertLess(html.index("Happy with this module?"), gif)
+        self.assertLess(html.index('id="tb-panel-overview"'), gif)
+        self.assertLess(gif, html.index("Description text."))
+        self.assertLess(gif, html.index('id="tb-panel-usage"'))
+        self.assertEqual(html.count("demo.gif"), 1)
 
     def test_no_gif_no_block(self):
         html = tb_gen_index.gen_index(self._addon(), cross_sell=False)
