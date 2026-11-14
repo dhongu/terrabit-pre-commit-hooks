@@ -165,3 +165,40 @@ class TestDependenciesPosition(unittest.TestCase):
         html = tb_gen_index.gen_index(self._suite(main_price=0), cross_sell=False)
         own = html.index("This module")
         self.assertIn("Free", html[own : html.index(">Base<")])
+
+
+class TestDemoGif(unittest.TestCase):
+    """GIF-ul demo (`capture_gif`) apare automat sub hero, înaintea cererii de rating (1.14.0)."""
+
+    def _addon(self, gifs=()):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(tmp))
+        os.makedirs(os.path.join(tmp, "readme"))
+        with open(os.path.join(tmp, "__manifest__.py"), "w", encoding="utf-8") as handle:
+            handle.write(repr(dict(MANIFEST, name="Demo", price=20, currency="EUR")))
+        with open(os.path.join(tmp, "readme", "DESCRIPTION.md"), "w", encoding="utf-8") as handle:
+            handle.write("Text.\n")
+        for rel in gifs:
+            path = os.path.join(tmp, "static", "description", *rel.split("/"))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            open(path, "wb").close()
+        return tmp
+
+    def test_gif_between_hero_and_rating(self):
+        html = tb_gen_index.gen_index(self._addon(["en/demo.gif"]), cross_sell=False)
+        gif = html.index('src="en/demo.gif"')
+        self.assertLess(html.index(tb_gen_index.TB_MARKER), gif)
+        self.assertLess(gif, html.index("Happy with this module?"))
+
+    def test_no_gif_no_block(self):
+        html = tb_gen_index.gen_index(self._addon(), cross_sell=False)
+        self.assertNotIn("demo.gif", html)
+
+    def test_english_page_ignores_romanian_gif(self):
+        html = tb_gen_index.gen_index(self._addon(["demo.gif"]), cross_sell=False)
+        self.assertNotIn("demo.gif", html)
+
+    def test_romanian_page_prefers_romanian_gif(self):
+        addon = self._addon(["demo.gif", "en/demo.gif"])
+        self.assertEqual(tb_gen_index.demo_gif(addon, "ro"), "demo.gif")
+        self.assertEqual(tb_gen_index.demo_gif(self._addon(["en/demo.gif"]), "ro"), "en/demo.gif")
