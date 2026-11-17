@@ -1,5 +1,12 @@
 # Istoric
 
+## Nepublicat
+
+- `tb-gen-index` și `tb-gen-docs`: opțiunea `--cross-sell-from <fișier.json>` adaugă module-surori
+  din alte repo-uri (lista `[{tech, name, category, summary}]`, sau `{"modules": [...]}`). Modulul
+  curent se sare, iar `CROSS_SELL_COUNT` rămâne. Pentru repo-urile `l10n-*` cu un singur modul;
+  lista comună e în `cross_sell/l10n_zip.json` (cele șapte `l10n_xx_zip`, fără `l10n-romania`).
+
 ## 1.14.1
 
 - `tb-gen-readme` și `tb-gen-docs`: `README.rst` se generează și pentru modulele cu `installable: False`

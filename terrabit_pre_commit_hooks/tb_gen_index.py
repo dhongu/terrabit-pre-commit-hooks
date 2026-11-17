@@ -1283,30 +1283,66 @@ def _truncate(text, limit=120):
     return text[:limit].rsplit(" ", 1)[0] + "…"
 
 
-def collect_siblings(addon_dir):
-    """Modulele-surori din aceeași suită: aceeași categorie întâi, apoi restul, alfabetic."""
+def load_cross_sell_list(path):
+    """Lista externă de module-surori (`--cross-sell-from`): [{tech, name, category, summary}, …].
+
+    Acceptă și un obiect cu cheia `modules`. Intrările fără `tech` se ignoră.
+    """
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    items = data.get("modules", []) if isinstance(data, dict) else data
+    entries = []
+    for it in items:
+        tech = str(it.get("tech") or "").strip()
+        if not tech:
+            continue
+        entries.append(
+            (
+                tech,
+                {
+                    "name": it.get("name") or tech,
+                    "category": it.get("category") or "",
+                    "summary": it.get("summary") or "",
+                },
+            )
+        )
+    return entries
+
+
+def collect_siblings(addon_dir, external=()):
+    """Modulele-surori: din aceeași suită și, dacă există, din lista externă.
+
+    Aceeași categorie întâi, apoi restul, alfabetic. Modulul curent nu apare niciodată.
+    """
     root = os.path.dirname(os.path.abspath(addon_dir)) or "."
     self_tech = os.path.basename(os.path.abspath(addon_dir))
     self_cat = str(read_manifest(addon_dir).get("category") or "")
     same_cat, others = [], []
+    seen = {self_tech}
     for entry in sorted(os.listdir(root)):
         d = os.path.join(root, entry)
-        if entry == self_tech or not os.path.isdir(d):
+        if entry in seen or not os.path.isdir(d):
             continue
         manifest = read_manifest(d)
         if not manifest or manifest.get("installable") is False:
             continue
+        seen.add(entry)
         item = (entry, manifest)
         (same_cat if str(manifest.get("category") or "") == self_cat else others).append(item)
+    for tech, info in sorted(external, key=lambda x: x[0]):
+        if tech in seen:
+            continue
+        seen.add(tech)
+        (same_cat if info["category"] == self_cat else others).append((tech, info))
     return same_cat + others
 
 
-def build_cross_sell(addon_dir, manifest, count=CROSS_SELL_COUNT, lang="en"):
+def build_cross_sell(addon_dir, manifest, count=CROSS_SELL_COUNT, lang="en", external=()):
     ver = str(manifest.get("version", ""))
     m = re.match(r"(\d+\.\d+)", ver)
     series = m.group(1) if m else "19.0"
     cards = []
-    for tech, sib in collect_siblings(addon_dir)[:count]:
+    for tech, sib in collect_siblings(addon_dir, external)[:count]:
         cards.append(
             CROSS_SELL_CARD
             % {
@@ -1427,7 +1463,7 @@ def build_stats(lang="en"):
     return STATS % {"cards": cards}
 
 
-def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=False):
+def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=False, external=()):
     manifest = read_manifest(addon_dir)
     tabs = build_tab_sources(addon_dir, manifest, allow_ro=allow_ro, lang=lang)
     strings = dict(TB, **I18N[lang])
@@ -1441,7 +1477,7 @@ def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=
         (SUBSCRIPTION % strings) if manifest.get("price") else "",
         (SCOPE_NOTE % strings) if scope_note else "",
         SUPPORT % strings,
-        build_cross_sell(addon_dir, manifest, lang=lang) if cross_sell else "",
+        build_cross_sell(addon_dir, manifest, lang=lang, external=external) if cross_sell else "",
         "</div>\n",
     ]
     return "\n".join(p for p in parts if p)
@@ -1470,7 +1506,7 @@ def may_overwrite(index_path):
     return any(marker in existing for marker in KNOWN_MARKERS)
 
 
-def process(addon_dir, cross_sell=True, force=False, allow_ro=False, lang="en", scope_note=False):
+def process(addon_dir, cross_sell=True, force=False, allow_ro=False, lang="en", scope_note=False, external=()):
     if not read_manifest(addon_dir):
         return False
     if not read_fragment(addon_dir, "DESCRIPTION.md"):
@@ -1484,7 +1520,9 @@ def process(addon_dir, cross_sell=True, force=False, allow_ro=False, lang="en", 
     # generează ÎNAINTE de a deschide fișierul — o eroare la generare nu trebuie
     # să lase un index.html trunchiat
     content = ascii_safe(
-        gen_index(addon_dir, cross_sell=cross_sell, allow_ro=allow_ro, lang=lang, scope_note=scope_note)
+        gen_index(
+            addon_dir, cross_sell=cross_sell, allow_ro=allow_ro, lang=lang, scope_note=scope_note, external=external
+        )
     )
     os.makedirs(desc_dir, exist_ok=True)
     with open(index_path, "w", encoding="utf8") as f:
@@ -1507,6 +1545,11 @@ def main():
     ap.add_argument("--addon-dir", action="append", default=[], help="un singur modul")
     ap.add_argument("--addons-dir", help="director cu mai multe module")
     ap.add_argument("--no-cross-sell", action="store_true", help="fără secțiunea de module-surori")
+    ap.add_argument(
+        "--cross-sell-from",
+        metavar="FIȘIER.json",
+        help="listă externă de module-surori [{tech, name, category, summary}], pentru repo-uri cu un singur modul",
+    )
     ap.add_argument("--force", action="store_true", help="suprascrie și index.html scrise manual")
     ap.add_argument(
         "--allow-ro", action="store_true", help="suită cu prezentare în RO (nu omite HISTORY cu diacritice)"
@@ -1525,6 +1568,7 @@ def main():
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
 
+    external = load_cross_sell_list(args.cross_sell_from) if args.cross_sell_from else []
     targets = list(args.addon_dir)
     if args.addons_dir:
         targets += list(find_addons(args.addons_dir))
@@ -1543,6 +1587,7 @@ def main():
             allow_ro=args.allow_ro or args.lang == "ro",
             lang=args.lang,
             scope_note=args.scope_note,
+            external=external,
         )
     )
     _logger.info("[tb-gen] gata: %s module generate.", count)
