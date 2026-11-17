@@ -6,6 +6,7 @@ Rulează din rădăcina repo-ului de hook-uri:
     python3 -m unittest tests/test_tb_gen_index.py
 """
 
+import json
 import os
 import sys
 import tempfile
@@ -122,6 +123,41 @@ class TestStoreDesign(unittest.TestCase):
         bg = tb_gen_index.HERO_BG % tb_gen_index.TB
         self.assertTrue(bg.startswith("background-color:#006F42;background-image:"))
         self.assertNotIn("%%", bg)
+
+
+class TestCrossSellList(unittest.TestCase):
+    """`--cross-sell-from`: module-surori din alte repo-uri (repo-uri cu un singur modul)."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.self_dir = os.path.join(self.root, "l10n_de_zip")
+        os.makedirs(self.self_dir)
+        with open(os.path.join(self.self_dir, "__manifest__.py"), "w", encoding="utf-8") as fh:
+            fh.write(repr({"name": "Germany", "version": "19.0.1.0.0", "category": "Localization"}))
+        self.list_path = os.path.join(self.root, "list.json")
+        with open(self.list_path, "w", encoding="utf-8") as fh:
+            json.dump(
+                {
+                    "modules": [
+                        {"tech": "l10n_de_zip", "name": "self", "category": "Localization"},
+                        {"tech": "l10n_pl_zip", "name": "Poland", "category": "Localization", "summary": "PL"},
+                        {"tech": "l10n_fr_zip", "name": "France", "category": "Localization", "summary": "FR"},
+                        {"name": "fara tech"},
+                    ]
+                },
+                fh,
+            )
+
+    def test_external_list_skips_self_and_empty_tech(self):
+        ext = tb_gen_index.load_cross_sell_list(self.list_path)
+        techs = [t for t, _ in tb_gen_index.collect_siblings(self.self_dir, ext)]
+        self.assertEqual(techs, ["l10n_fr_zip", "l10n_pl_zip"])
+
+    def test_cross_sell_only_with_list(self):
+        manifest = tb_gen_index.read_manifest(self.self_dir)
+        self.assertEqual(tb_gen_index.build_cross_sell(self.self_dir, manifest), "")
+        ext = tb_gen_index.load_cross_sell_list(self.list_path)
+        self.assertIn("l10n_pl_zip", tb_gen_index.build_cross_sell(self.self_dir, manifest, external=ext))
 
 
 if __name__ == "__main__":

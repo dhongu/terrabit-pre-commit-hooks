@@ -1,0 +1,47 @@
+{
+  "_comment": "Module-surori pentru repo-urile l10n-* (un modul per repo). Fără l10n-romania. Bulgaria, Ungaria, Moldova excluse până apar pe Apps (404 la 19.0 la 17.11.2026).",
+  "modules": [
+    {
+      "tech": "l10n_pl_zip",
+      "name": "Poland - City from ZIP",
+      "category": "Localization",
+      "summary": "Polish localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_de_zip",
+      "name": "Germany - City from ZIP",
+      "category": "Localization",
+      "summary": "German localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_fr_zip",
+      "name": "France - City from ZIP",
+      "category": "Localization",
+      "summary": "French localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_es_zip",
+      "name": "Spain - City from ZIP",
+      "category": "Localization",
+      "summary": "Spanish localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_cz_zip",
+      "name": "Czechia - City from ZIP",
+      "category": "Localization",
+      "summary": "Czech localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_sk_zip",
+      "name": "Slovakia - City from ZIP",
+      "category": "Localization",
+      "summary": "Slovak localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_it_zip",
+      "name": "Italy - City from ZIP",
+      "category": "Localization",
+      "summary": "Italian localities with postal code (CAP) and province, filled in from the CAP"
+    }
+  ]
+}
