@@ -177,6 +177,14 @@ class TestGenReadme(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(self.addon, "README.rst")))
         self.assertFalse(os.path.exists(os.path.join(other, "README.rst")))
 
+    def test_non_installable_module_gets_readme(self):
+        hidden = os.path.join(self.root, "hidden")
+        write(os.path.join(hidden, "__manifest__.py"), MANIFEST.replace('"maintainers"', '"installable": False,\n    "maintainers"'))
+        write(os.path.join(hidden, "readme", "DESCRIPTION.md"), "Not installable yet.\n")
+        self.run_hook()
+        self.assertTrue(os.path.isfile(os.path.join(hidden, "README.rst")))
+        self.assertTrue(os.path.isfile(os.path.join(self.addon, "README.rst")))
+
     def test_module_without_description_is_skipped(self):
         os.remove(os.path.join(self.addon, "readme", "DESCRIPTION.md"))
         self.run_hook()

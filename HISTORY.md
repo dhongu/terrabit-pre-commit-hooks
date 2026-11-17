@@ -1,5 +1,12 @@
 # Istoric
 
+## 1.14.1
+
+- `tb-gen-readme` și `tb-gen-docs`: `README.rst` se generează și pentru modulele cu `installable: False`
+  (pylint_odoo, C8112 `missing-readme`, cere README.rst la orice addon). Până acum astfel de module
+  cereau o intrare în `exclude` la fiecare repo consumator. `index.html` (Apps Store) rămâne doar pentru
+  modulele instalabile. Insignele (fișă, teste, licență) și restul README-ului nu depind de `installable`.
+
 ## 1.14.0
 
 - `tb-gen-index` și `tb-gen-docs`: GIF-ul demo al modulului (`static/description/en/demo.gif`, făcut

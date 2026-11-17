@@ -45,8 +45,12 @@ def addons_from_files(addons_dir, files):
     return names
 
 
-def all_addons(addons_dir, files=None):
-    """(nume, director, manifest) ale modulelor instalabile; cu ``files``, doar cele atinse."""
+def all_addons(addons_dir, files=None, installable_only=True):
+    """(nume, director, manifest) ale modulelor; cu ``files``, doar cele atinse.
+
+    Implicit doar modulele instalabile (index.html, Apps Store). Cu ``installable_only=False``
+    intră și modulele ``installable: False``: pylint_odoo cere README.rst și la ele (C8112).
+    """
     selected = addons_from_files(addons_dir, files) if files else None
     for name in sorted(os.listdir(addons_dir)):
         if selected is not None and name not in selected:
@@ -54,8 +58,11 @@ def all_addons(addons_dir, files=None):
         addon_dir = os.path.join(addons_dir, name)
         if os.path.isdir(addon_dir):
             manifest = read_manifest(addon_dir)[1]
-            if manifest is not None and manifest.get("installable", True):
-                yield name, addon_dir, manifest
+            if manifest is None:
+                continue
+            if installable_only and not manifest.get("installable", True):
+                continue
+            yield name, addon_dir, manifest
 
 
 def load_stats(addons_dir):
