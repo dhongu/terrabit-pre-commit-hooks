@@ -66,7 +66,8 @@ def main(argv=None):
         parser.error("--no-readme și --no-index laolaltă nu lasă nimic de generat")
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
 
-    addons = list(all_addons(args.addons_dir, args.files))
+    # README.rst și pentru modulele neinstalabile; index.html doar pentru cele instalabile.
+    addons = list(all_addons(args.addons_dir, args.files, installable_only=False))
     failed = 0
     if not args.no_readme:
         org, repo = github_repo(args.addons_dir, args.org_name, args.repo_name)
@@ -76,7 +77,9 @@ def main(argv=None):
             addons, org, repo, args.branch, load_stats(args.addons_dir), not args.no_roadmap, args.update_digest
         )
     if not args.no_index:
-        for _name, addon_dir, _manifest in addons:
+        for _name, addon_dir, manifest in addons:
+            if not manifest.get("installable", True):
+                continue
             tb_gen_index.process(
                 addon_dir,
                 cross_sell=not args.no_cross_sell,

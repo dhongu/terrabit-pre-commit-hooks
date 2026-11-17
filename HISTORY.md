@@ -7,6 +7,21 @@
   curent se sare, iar `CROSS_SELL_COUNT` rămâne. Pentru repo-urile `l10n-*` cu un singur modul;
   lista comună e în `cross_sell/l10n_zip.json` (cele șapte `l10n_xx_zip`, fără `l10n-romania`).
 
+## 1.14.1
+
+- `tb-gen-readme` și `tb-gen-docs`: `README.rst` se generează și pentru modulele cu `installable: False`
+  (pylint_odoo, C8112 `missing-readme`, cere README.rst la orice addon). Până acum astfel de module
+  cereau o intrare în `exclude` la fiecare repo consumator. `index.html` (Apps Store) rămâne doar pentru
+  modulele instalabile. Insignele (fișă, teste, licență) și restul README-ului nu depind de `installable`.
+
+## 1.14.0
+
+- `tb-gen-index` și `tb-gen-docs`: GIF-ul demo al modulului (`static/description/en/demo.gif`, făcut
+  de `capture_gif` din `deltatech_doc_screenshots`) apare automat primul în tabul **Overview**,
+  imediat sub titlul lui și înaintea textului descrierii. Pagina RO ia `demo.gif` (subtitrări în română), altfel
+  `en/demo.gif`; pagina EN nu ia niciodată varianta RO. Fără GIF, pagina nu se schimbă.
+- `tb-gen-docs` se declanșează și la modificarea unui `demo.gif`.
+
 ## 1.13.1
 
 - `tb-gen-index` și `tb-gen-docs`: steagul UE din insigna „European Union” are 24×16 px (era 18×12),

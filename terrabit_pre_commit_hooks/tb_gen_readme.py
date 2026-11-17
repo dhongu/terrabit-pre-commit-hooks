@@ -604,7 +604,8 @@ def main(argv=None):
     org, repo = github_repo(args.addons_dir, args.org_name, args.repo_name)
     if not (org and repo):
         parser.error("nu pot determina repo-ul GitHub: dați --org-name și --repo-name")
-    addons = list(all_addons(args.addons_dir, args.files))
+    # README.rst și pentru modulele neinstalabile (pylint_odoo C8112 le cere); index.html nu.
+    addons = list(all_addons(args.addons_dir, args.files, installable_only=False))
     _changed, failed = run(
         addons, org, repo, args.branch, load_stats(args.addons_dir), not args.no_roadmap, args.update_digest
     )

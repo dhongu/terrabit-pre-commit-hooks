@@ -51,6 +51,10 @@ class TestModuleSources(unittest.TestCase):
     def test_all_addons_skips_non_installable_and_non_modules(self):
         self.assertEqual([a[0] for a in tb_module_sources.all_addons(self.root)], ["a", "c"])
 
+    def test_non_installable_included_when_asked(self):
+        names = [a[0] for a in tb_module_sources.all_addons(self.root, installable_only=False)]
+        self.assertEqual(names, ["a", "b", "c"])
+
     def test_files_select_touched_modules(self):
         files = [os.path.join(self.root, "c", "readme", "USAGE.md")]
         self.assertEqual([a[0] for a in tb_module_sources.all_addons(self.root, files)], ["c"])
@@ -136,6 +140,14 @@ class TestGenDocs(unittest.TestCase):
         for (name, rel), content in snapshot.items():
             with open(self.path(name, *rel), encoding="utf8") as f:
                 self.assertEqual(f.read(), content)
+
+    def test_non_installable_gets_readme_but_no_index(self):
+        write(self.path("gamma", "__manifest__.py"), MANIFEST.replace('"license"', '"installable": False,\n    "license"') % "gamma")
+        write(self.path("gamma", "readme", "DESCRIPTION.md"), "gamma is not installable yet.\n")
+        self.assertEqual(self.run_hook(), 0)
+        self.assertTrue(os.path.isfile(self.path("gamma", "README.rst")))
+        self.assertFalse(os.path.exists(self.path("gamma", "static")))
+        self.assertTrue(os.path.isfile(self.path("alpha", "static", "description", "index.html")))
 
     def test_readme_failure_gives_exit_code_1(self):
         write(self.path("alpha", "readme", "USAGE.rst"), "Usage\n=====\n")  # .md și .rst deodată
