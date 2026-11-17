@@ -1,11 +1,11 @@
 {
-  "_comment": "Module-surori pentru repo-urile l10n-* (un modul per repo). Fără l10n-romania. Bulgaria, Ungaria, Moldova excluse până apar pe Apps (404 la 19.0 la 17.11.2026).",
+  "_comment": "Module-surori pentru repo-urile l10n-* (un modul per repo). Fără l10n-romania. Bulgaria și Moldova excluse până apar pe Apps (404 la 19.0 și 20.0, 17.11.2026); l10n_hu_zip exclus din aceleași motive.",
   "modules": [
     {
-      "tech": "l10n_pl_zip",
-      "name": "Poland - City from ZIP",
+      "tech": "l10n_cz_zip",
+      "name": "Czechia - City from ZIP",
       "category": "Localization",
-      "summary": "Polish localities with postal code and region, filled in from the postal code"
+      "summary": "Czech localities with postal code and region, filled in from the postal code"
     },
     {
       "tech": "l10n_de_zip",
@@ -14,34 +14,40 @@
       "summary": "German localities with postal code and region, filled in from the postal code"
     },
     {
-      "tech": "l10n_fr_zip",
-      "name": "France - City from ZIP",
-      "category": "Localization",
-      "summary": "French localities with postal code and region, filled in from the postal code"
-    },
-    {
       "tech": "l10n_es_zip",
       "name": "Spain - City from ZIP",
       "category": "Localization",
       "summary": "Spanish localities with postal code and region, filled in from the postal code"
     },
     {
-      "tech": "l10n_cz_zip",
-      "name": "Czechia - City from ZIP",
+      "tech": "l10n_fr_zip",
+      "name": "France - City from ZIP",
       "category": "Localization",
-      "summary": "Czech localities with postal code and region, filled in from the postal code"
+      "summary": "French localities with postal code and region, filled in from the postal code"
     },
     {
-      "tech": "l10n_sk_zip",
-      "name": "Slovakia - City from ZIP",
-      "category": "Localization",
-      "summary": "Slovak localities with postal code and region, filled in from the postal code"
+      "tech": "l10n_hu_city",
+      "name": "Hungarian City Database - Official Postal List",
+      "category": "Tech/Localization",
+      "summary": "Official Magyar Posta city and postal code database with automatic partner migration"
     },
     {
       "tech": "l10n_it_zip",
       "name": "Italy - City from ZIP",
       "category": "Localization",
       "summary": "Italian localities with postal code (CAP) and province, filled in from the CAP"
+    },
+    {
+      "tech": "l10n_pl_zip",
+      "name": "Poland - City from ZIP",
+      "category": "Localization",
+      "summary": "Polish localities with postal code and region, filled in from the postal code"
+    },
+    {
+      "tech": "l10n_sk_zip",
+      "name": "Slovakia - City from ZIP",
+      "category": "Localization",
+      "summary": "Slovak localities with postal code and region, filled in from the postal code"
     }
   ]
 }
