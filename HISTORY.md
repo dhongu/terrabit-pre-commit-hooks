@@ -1,6 +1,6 @@
 # Istoric
 
-## Nepublicat
+## 1.15.0
 
 - `tb-gen-index` și `tb-gen-docs`: filmul de prezentare de pe YouTube apare la finalul tabului **Overview**,
   după descriere (clientul citește întâi ce face modulul), ca miniatură cu buton „Watch on YouTube” (fără `<iframe>`). Sursa e cheia
