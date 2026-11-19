@@ -36,7 +36,8 @@ Structura paginii (doar EN):
   (versiune, categorie, găzduire, licență) | panou cu teste și bara de acoperire din
   scripts/test_stats.json (panoul lipsește la modulele fără teste)
   NAV-PILLS cu taburi: Overview / Presentation / Configuration / Usage / Română / Versions
-    - Overview      = GIF-ul demo, primul sub titlu, dacă există (static/description/en/demo.gif;
+    - Overview      = filmul YouTube (`"youtube"` din banner.json: miniatură + link), apoi
+                      GIF-ul demo, primul sub titlu, dacă există (static/description/en/demo.gif;
                       pagina RO: demo.gif, altfel en/demo.gif; îl face `capture_gif` din
                       deltatech_doc_screenshots), apoi
                       DESCRIPTION.md (+ CONTEXT.md la final); listele de funcții cu
@@ -214,6 +215,10 @@ I18N = {
         "a rating on this page is the best way to say thanks &mdash; and it helps other Odoo users find it too. "
         "Thank you for your support!",
         "demo_alt": "Animated demo of the module",
+        "video_title": "Watch the presentation",
+        "video_body": "A short video that walks through the module, step by step.",
+        "video_button": "Watch on YouTube",
+        "video_lang": {"en": "", "ro": " (in Romanian)"},
         "rating_paid_title": "Happy with this module?",
         "rating_paid_body": "A rating on this page helps other Odoo users find it and tells our developers "
         "what works. Thank you!",
@@ -275,6 +280,10 @@ I18N = {
         "un rating pe aceast&#259; pagin&#259; e cel mai bun mod de a ne mul&#539;umi &mdash; &#537;i &#238;i ajut&#259; pe al&#539;i utilizatori Odoo s&#259; &#238;l g&#259;seasc&#259;. "
         "V&#259; mul&#539;umim pentru sprijin!",
         "demo_alt": "Demonstra&#539;ie animat&#259; a modulului",
+        "video_title": "Vede&#539;i prezentarea",
+        "video_body": "Un film scurt care prezint&#259; modulul, pas cu pas.",
+        "video_button": "Vede&#539;i pe YouTube",
+        "video_lang": {"en": " (&#238;n englez&#259;)", "ro": ""},
         "rating_paid_title": "Sunte&#539;i mul&#539;umit de acest modul?",
         "rating_paid_body": "Un rating pe aceast&#259; pagin&#259; &#238;i ajut&#259; pe al&#539;i utilizatori Odoo s&#259; &#238;l g&#259;seasc&#259; &#537;i le arat&#259; "
         "programatorilor no&#537;tri ce func&#539;ioneaz&#259; bine. V&#259; mul&#539;umim!",
@@ -1110,6 +1119,66 @@ def build_demo(addon_dir, lang="en"):
     return DEMO % {"src": src, "alt": I18N[lang]["demo_alt"]}
 
 
+# Filmul de prezentare de pe YouTube (`"youtube"` din banner.json), primul în tabul Overview,
+# înaintea GIF-ului demo. Miniatură + buton cu link, nu <iframe>: sanitizerul Apps Store nu
+# garantează iframe-ul, iar o imagine cu link trece sigur. Miniatura 16:9 (maxresdefault) vine de la i.ytimg.com; filmele noastre sunt 1280×720, deci există.
+VIDEO = """
+<div class="rounded-4 border shadow-sm p-3 mb-4" style="background-color:#f4f8f4;">
+  <div class="row align-items-center g-3">
+    <div class="col-md-6">
+      <a href="%(url)s" target="_blank" rel="noopener"><img class="img-fluid d-block rounded-3" style="max-width:100%%;height:auto;" src="https://i.ytimg.com/vi/%(id)s/maxresdefault.jpg" alt="%(title)s" loading="lazy"/></a>
+    </div>
+    <div class="col-md-6">
+      <h3 class="h5 mb-2" style="color:%(body)s;">%(icon)s%(title)s%(lang_note)s</h3>
+      <p class="mb-3" style="color:%(muted)s;">%(text)s</p>
+      <a class="btn btn-lg" style="background-color:#ff0000;color:#ffffff;" href="%(url)s" target="_blank" rel="noopener">%(button_icon)s%(button)s</a>
+    </div>
+  </div>
+</div>
+"""
+
+_YOUTUBE_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
+
+
+def youtube_video(addon_dir, lang="en"):
+    """(id, limba) filmului din banner.json pentru limba paginii, sau None.
+
+    `"youtube": "ID"` e filmul în engleză; `"youtube": {"en": "ID", "ro": "ID"}` pe limbi.
+    Pagina ia filmul în limba ei, altfel pe cel din altă limbă (cu nota limbii în titlu):
+    la un film vorbit, spre deosebire de GIF-ul subtitrat, nota e suficientă."""
+    path = os.path.join(addon_dir, "static", "description", "banner.json")
+    try:
+        with open(path, encoding="utf8") as f:
+            value = json.load(f).get("youtube")
+    except (OSError, ValueError, AttributeError):
+        return None
+    videos = {"en": value} if isinstance(value, str) else value if isinstance(value, dict) else {}
+    videos = {k: v for k, v in videos.items() if isinstance(v, str) and _YOUTUBE_ID.match(v)}
+    for key in [lang] + sorted(k for k in videos if k != lang):
+        if key in videos:
+            return videos[key], key
+    return None
+
+
+def build_video(addon_dir, lang="en"):
+    found = youtube_video(addon_dir, lang)
+    if not found:
+        return ""
+    vid, vlang = found
+    strings = I18N[lang]
+    return VIDEO % dict(
+        TB,
+        id=vid,
+        url="https://www.youtube.com/watch?v=%s" % vid,
+        icon=_fa("play-circle"),
+        title=strings["video_title"],
+        lang_note=strings["video_lang"].get(vlang, ""),
+        text=strings["video_body"],
+        button_icon=_fa("youtube-play"),
+        button=strings["video_button"],
+    )
+
+
 def build_tab_sources(addon_dir, manifest, allow_ro=False, lang="en"):
     """Întoarce [(key, title, markdown)] doar pentru taburile cu fragment existent."""
     name = manifest.get("name") or ""
@@ -1472,7 +1541,7 @@ def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=
         build_hero(addon_dir, manifest, lang),
         build_rating(manifest, lang),
         build_dependencies(addon_dir, manifest, lang),
-        build_tabs(tabs, demo=build_demo(addon_dir, lang)),
+        build_tabs(tabs, demo=build_video(addon_dir, lang) + build_demo(addon_dir, lang)),
         build_stats(lang),
         (SUBSCRIPTION % strings) if manifest.get("price") else "",
         (SCOPE_NOTE % strings) if scope_note else "",
