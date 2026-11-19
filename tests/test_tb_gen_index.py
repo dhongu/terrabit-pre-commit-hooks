@@ -160,10 +160,6 @@ class TestCrossSellList(unittest.TestCase):
         self.assertIn("l10n_pl_zip", tb_gen_index.build_cross_sell(self.self_dir, manifest, external=ext))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestDependenciesPosition(unittest.TestCase):
     """„What the price includes” stă deasupra taburilor, sub cererea de rating (1.12.2)."""
 
@@ -246,7 +242,7 @@ class TestDemoGif(unittest.TestCase):
 
 
 class TestYoutubeVideo(unittest.TestCase):
-    """Filmul YouTube din banner.json apare primul în Overview, înaintea GIF-ului."""
+    """Filmul YouTube din banner.json apare la finalul Overview, după GIF și descriere."""
 
     def _addon(self, youtube=None, gif=False):
         tmp = tempfile.mkdtemp()
@@ -257,6 +253,8 @@ class TestYoutubeVideo(unittest.TestCase):
             handle.write(repr(dict(MANIFEST, name="Demo", price=20, currency="EUR")))
         with open(os.path.join(tmp, "readme", "DESCRIPTION.md"), "w", encoding="utf-8") as handle:
             handle.write("Description text.\n")
+        with open(os.path.join(tmp, "readme", "USAGE.md"), "w", encoding="utf-8") as handle:
+            handle.write("Usage text.\n")
         banner = {"title": "Demo"}
         if youtube is not None:
             banner["youtube"] = youtube
@@ -266,12 +264,12 @@ class TestYoutubeVideo(unittest.TestCase):
             open(os.path.join(tmp, "static", "description", "en", "demo.gif"), "wb").close()
         return tmp
 
-    def test_video_before_gif_and_description(self):
+    def test_video_after_gif_and_description(self):
         html = tb_gen_index.gen_index(self._addon("NkhKVSwUUHw", gif=True), cross_sell=False)
         video = html.index("https://www.youtube.com/watch?v=NkhKVSwUUHw")
-        self.assertLess(html.index('id="tb-panel-overview"'), video)
-        self.assertLess(video, html.index('src="en/demo.gif"'))
-        self.assertLess(video, html.index("Description text."))
+        self.assertLess(html.index('src="en/demo.gif"'), video)
+        self.assertLess(html.index("Description text."), video)
+        self.assertLess(video, html.index('id="tb-panel-usage"'))
         self.assertIn("i.ytimg.com/vi/NkhKVSwUUHw/maxresdefault.jpg", html)
         self.assertNotIn("<iframe", html)
         self.assertNotIn("(in Romanian)", html)
@@ -289,3 +287,7 @@ class TestYoutubeVideo(unittest.TestCase):
         for value in (None, "", "not a video id", {"en": "x<script>"}):
             html = tb_gen_index.gen_index(self._addon(value), cross_sell=False)
             self.assertNotIn("youtube.com", html)
+
+
+if __name__ == "__main__":
+    unittest.main()

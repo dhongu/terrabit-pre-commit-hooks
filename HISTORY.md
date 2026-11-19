@@ -1,9 +1,9 @@
 # Istoric
 
-## Nepublicat
+## 1.15.0
 
-- `tb-gen-index` și `tb-gen-docs`: filmul de prezentare de pe YouTube apare primul în tabul **Overview**,
-  înaintea GIF-ului demo, ca miniatură cu buton „Watch on YouTube” (fără `<iframe>`). Sursa e cheia
+- `tb-gen-index` și `tb-gen-docs`: filmul de prezentare de pe YouTube apare la finalul tabului **Overview**,
+  după descriere (clientul citește întâi ce face modulul), ca miniatură cu buton „Watch on YouTube” (fără `<iframe>`). Sursa e cheia
   `"youtube"` din `static/description/banner.json`: `"ID"` (film în engleză) sau `{"en": "ID", "ro": "ID"}`.
   Pagina ia filmul în limba ei, altfel pe cel din altă limbă, cu limba notată în titlu („(in Romanian)”).
 - `tb-gen-index` și `tb-gen-docs`: opțiunea `--cross-sell-from <fișier.json>` adaugă module-surori
