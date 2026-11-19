@@ -243,3 +243,49 @@ class TestDemoGif(unittest.TestCase):
         addon = self._addon(["demo.gif", "en/demo.gif"])
         self.assertEqual(tb_gen_index.demo_gif(addon, "ro"), "demo.gif")
         self.assertEqual(tb_gen_index.demo_gif(self._addon(["en/demo.gif"]), "ro"), "en/demo.gif")
+
+
+class TestYoutubeVideo(unittest.TestCase):
+    """Filmul YouTube din banner.json apare primul în Overview, înaintea GIF-ului."""
+
+    def _addon(self, youtube=None, gif=False):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(tmp))
+        os.makedirs(os.path.join(tmp, "readme"))
+        os.makedirs(os.path.join(tmp, "static", "description", "en"))
+        with open(os.path.join(tmp, "__manifest__.py"), "w", encoding="utf-8") as handle:
+            handle.write(repr(dict(MANIFEST, name="Demo", price=20, currency="EUR")))
+        with open(os.path.join(tmp, "readme", "DESCRIPTION.md"), "w", encoding="utf-8") as handle:
+            handle.write("Description text.\n")
+        banner = {"title": "Demo"}
+        if youtube is not None:
+            banner["youtube"] = youtube
+        with open(os.path.join(tmp, "static", "description", "banner.json"), "w", encoding="utf-8") as handle:
+            json.dump(banner, handle)
+        if gif:
+            open(os.path.join(tmp, "static", "description", "en", "demo.gif"), "wb").close()
+        return tmp
+
+    def test_video_before_gif_and_description(self):
+        html = tb_gen_index.gen_index(self._addon("NkhKVSwUUHw", gif=True), cross_sell=False)
+        video = html.index("https://www.youtube.com/watch?v=NkhKVSwUUHw")
+        self.assertLess(html.index('id="tb-panel-overview"'), video)
+        self.assertLess(video, html.index('src="en/demo.gif"'))
+        self.assertLess(video, html.index("Description text."))
+        self.assertIn("i.ytimg.com/vi/NkhKVSwUUHw/maxresdefault.jpg", html)
+        self.assertNotIn("<iframe", html)
+        self.assertNotIn("(in Romanian)", html)
+
+    def test_other_language_video_is_labelled(self):
+        html = tb_gen_index.gen_index(self._addon({"ro": "NkhKVSwUUHw"}), cross_sell=False)
+        self.assertIn("Watch the presentation (in Romanian)", html)
+
+    def test_page_language_preferred(self):
+        addon = self._addon({"ro": "AAAAAAAAAAA", "en": "BBBBBBBBBBB"})
+        self.assertEqual(tb_gen_index.youtube_video(addon, "en"), ("BBBBBBBBBBB", "en"))
+        self.assertEqual(tb_gen_index.youtube_video(addon, "ro"), ("AAAAAAAAAAA", "ro"))
+
+    def test_no_or_invalid_id_no_block(self):
+        for value in (None, "", "not a video id", {"en": "x<script>"}):
+            html = tb_gen_index.gen_index(self._addon(value), cross_sell=False)
+            self.assertNotIn("youtube.com", html)
