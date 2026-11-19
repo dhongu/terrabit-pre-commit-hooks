@@ -36,12 +36,12 @@ Structura paginii (doar EN):
   (versiune, categorie, găzduire, licență) | panou cu teste și bara de acoperire din
   scripts/test_stats.json (panoul lipsește la modulele fără teste)
   NAV-PILLS cu taburi: Overview / Presentation / Configuration / Usage / Română / Versions
-    - Overview      = filmul YouTube (`"youtube"` din banner.json: miniatură + link), apoi
-                      GIF-ul demo, primul sub titlu, dacă există (static/description/en/demo.gif;
+    - Overview      = GIF-ul demo, primul sub titlu, dacă există (static/description/en/demo.gif;
                       pagina RO: demo.gif, altfel en/demo.gif; îl face `capture_gif` din
                       deltatech_doc_screenshots), apoi
                       DESCRIPTION.md (+ CONTEXT.md la final); listele de funcții cu
-                      ≥3 itemi devin carduri Bootstrap cu bifă verde. Dacă modulul
+                      ≥3 itemi devin carduri Bootstrap cu bifă verde. La final, filmul YouTube (`"youtube"` din
+                      banner.json: miniatură + link). Dacă modulul
                       depinde (oricât de indirect, în aceeași suită) de un modul cu
                       readme/FRAMEWORK_FEATURES.md, fragmentul acela se anexează aici
                       (ex. capacitățile comune ale conectoarelor deltatech_marketplace)
@@ -1119,8 +1119,8 @@ def build_demo(addon_dir, lang="en"):
     return DEMO % {"src": src, "alt": I18N[lang]["demo_alt"]}
 
 
-# Filmul de prezentare de pe YouTube (`"youtube"` din banner.json), primul în tabul Overview,
-# înaintea GIF-ului demo. Miniatură + buton cu link, nu <iframe>: sanitizerul Apps Store nu
+# Filmul de prezentare de pe YouTube (`"youtube"` din banner.json), la finalul tabului Overview,
+# după descriere: pe Apps, clientul citește întâi ce face modulul, apoi vede filmul. Miniatură + buton cu link, nu <iframe>: sanitizerul Apps Store nu
 # garantează iframe-ul, iar o imagine cu link trece sigur. Miniatura 16:9 (maxresdefault) vine de la i.ytimg.com; filmele noastre sunt 1280×720, deci există.
 VIDEO = """
 <div class="rounded-4 border shadow-sm p-3 mb-4" style="background-color:#f4f8f4;">
@@ -1303,8 +1303,9 @@ EYEBROW = (
 )
 
 
-def build_tabs(tabs, demo=""):
-    """Taburile paginii; ``demo`` (blocul GIF-ului) intră primul în Overview, sub titlul lui."""
+def build_tabs(tabs, demo="", video=""):
+    """Taburile paginii; ``demo`` (blocul GIF-ului) intră primul în Overview, sub titlul lui,
+    iar ``video`` (filmul YouTube) la finalul Overview, după descriere."""
     if not tabs:
         return ""
     panes = []
@@ -1315,8 +1316,8 @@ def build_tabs(tabs, demo=""):
             # subtitlurile Prezentare / Configurare / Utilizare țin loc de titlu
             heading = ""
         body = build_panel_body(key, md_text)
-        if key == "overview" and demo:
-            body = demo + body
+        if key == "overview":
+            body = demo + body + video
         panes.append(
             PANEL
             % {
@@ -1541,7 +1542,7 @@ def gen_index(addon_dir, cross_sell=True, allow_ro=False, lang="en", scope_note=
         build_hero(addon_dir, manifest, lang),
         build_rating(manifest, lang),
         build_dependencies(addon_dir, manifest, lang),
-        build_tabs(tabs, demo=build_video(addon_dir, lang) + build_demo(addon_dir, lang)),
+        build_tabs(tabs, demo=build_demo(addon_dir, lang), video=build_video(addon_dir, lang)),
         build_stats(lang),
         (SUBSCRIPTION % strings) if manifest.get("price") else "",
         (SCOPE_NOTE % strings) if scope_note else "",
