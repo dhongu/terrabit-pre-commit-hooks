@@ -36,6 +36,12 @@
   language: python
   files: '\.xml$'
   verbose: true
+- id: check-xss-patterns
+  name: Tipare XSS (Markup din f-string/%/format, Html fără sanitize, innerHTML, t-raw, iframe sandbox)
+  entry: tb-check-xss-patterns
+  language: python
+  files: '\.(py|js|xml)$'
+  exclude: '(^|/)(tests|migrations)/|/static/lib/|\.min\.js$'
 - id: tb-odoo-lint
   name: API Odoo 19/20 eliminate sau redenumite (doar fișierele încărcate de modul)
   entry: tb-odoo-lint

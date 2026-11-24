@@ -1,5 +1,14 @@
 # Istoric
 
+## 1.16.0
+
+- Hook nou `check-xss-patterns`: oprește tiparele XSS găsite la auditul după CVE-2026-130029
+  (`Markup(f"...")`, `%` / `.format()` / `+` aplicate înainte de `Markup`, `Markup(json.dumps(...))`,
+  câmpuri `Html` editabile cu `sanitize=False`, răspunsuri `text/html` fără `Content-Security-Policy`,
+  `innerHTML` / `insertAdjacentHTML` / `$(...).html()` / `markup()` pe valori neliterale, iframe cu
+  `allow-scripts allow-same-origin`; `t-raw` doar avertisment). Excepție pe linie:
+  `# xss-ok: <motiv>` (motivul e obligatoriu).
+
 ## 1.15.0
 
 - `tb-gen-index` și `tb-gen-docs`: filmul de prezentare de pe YouTube apare la finalul tabului **Overview**,
