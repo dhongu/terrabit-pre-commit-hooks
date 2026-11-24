@@ -315,6 +315,34 @@ class TestExceptii(unittest.TestCase):
         text = 'x = Markup(f"<b>{n}</b>")  # xss-ok\n'
         self.assertEqual(reguli("m/models/x.py", text), ["XSS-OK-00", "XSS-PY-01"])
 
+    def test_xss_ok_cu_majuscula_eslint(self):
+        # `capitalized-comments --fix` din ESLint face din `// xss-ok:` `// Xss-ok:`.
+        text = """
+            // Xss-ok: html trece prin DOMPurify.sanitize
+            el.innerHTML = this._mdToHtml(md);
+            """
+        self.assertEqual(reguli("m/static/src/x.js", text), [])
+
+    def test_xss_ok_checked_js(self):
+        text = """
+            // Checked, xss-ok: html trece prin DOMPurify.sanitize
+            el.innerHTML = this._mdToHtml(md);
+            """
+        self.assertEqual(reguli("m/static/src/x.js", text), [])
+
+    def test_xss_ok_majuscule_python(self):
+        text = 'x = Markup(f"<b>{n}</b>")  # XSS-ok: n este int\n'
+        self.assertEqual(reguli("m/models/x.py", text), [])
+
+    def test_xss_ok_majuscule_fara_motiv(self):
+        text = """
+            // Xss-ok
+            el.innerHTML = this._mdToHtml(md);
+            """
+        self.assertIn("XSS-OK-00", reguli("m/static/src/x.js", text))
+        text = 'x = Markup(f"<b>{n}</b>")  # XSS-OK:\n'
+        self.assertEqual(reguli("m/models/x.py", text), ["XSS-OK-00", "XSS-PY-01"])
+
     def test_xss_ok_doua_puncte_fara_motiv(self):
         self.assertEqual(
             reguli("m/views/x.xml", '<t t-raw="x"/> <!-- xss-ok: -->\n'),
