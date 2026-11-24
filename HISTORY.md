@@ -1,5 +1,13 @@
 # Istoric
 
+## 1.17.0
+
+- `tb-gen-index` și `tb-gen-docs`: cardul cu numărul de module publicate de Terrabit și textul
+  „Our 600+ apps” / „Cele peste 600 de aplicații” devin „800+” / „peste 800”: pe 24 noiembrie 2026
+  Apps Store arăta 827 de module Terrabit (747 pe 19.0, 580 pe 20.0). Cifra se schimbă doar la
+  o nouă sută depășită, ca `index.html` din suite să nu se rescrie la fiecare modul publicat.
+  Paginile se regenerează la următorul `pre-commit run -a` din fiecare suită, după bump-ul de `rev`.
+
 ## 1.16.1
 
 - `check-xss-patterns`: marcajul `xss-ok` se recunoaște fără diferență între majuscule și minuscule,
