@@ -291,3 +291,19 @@ class TestYoutubeVideo(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStatsCard(unittest.TestCase):
+    """Numărul de module din cardul de statistici vine ca imagine animată de pe terrabit.ro."""
+
+    def test_modules_figure_is_the_terrabit_svg(self):
+        html = tb_gen_index.build_stats("en")
+        self.assertIn('<img src="https://www.terrabit.ro/theme_terrabit/apps-count.svg"', html)
+        self.assertIn('alt="800+"', html)
+        self.assertNotIn(">800+<", html)
+        self.assertIn("Modules published on Odoo Apps", html)
+
+    def test_partner_level_stays_text(self):
+        html = tb_gen_index.build_stats("ro")
+        self.assertIn(">Silver</div>", html)
+        self.assertIn("Module publicate pe Odoo Apps", html)

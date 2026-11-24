@@ -437,15 +437,27 @@ STATS = """
 """
 STAT_CARD = """<div class="col-md-%(col)s">
     <div class="border rounded-3 px-4 py-2 h-100">
-      <div class="fw-bold" style="font-size:2.2rem;color:%(primary)s;line-height:1;">%(big)s</div>
+      %(figure)s
       <div class="mt-2" style="font-size:0.9rem;color:%(muted)s;">%(small)s</div>
     </div>
   </div>"""
+STAT_TEXT = """<div class="fw-bold" style="font-size:2.2rem;color:%(primary)s;line-height:1;">%(big)s</div>"""
+# Cifra animată servită de terrabit.ro: Odoo Apps elimină iframe-urile și scripturile din
+# pagină, dar păstrează imaginile externe (verificat pe deltatech_test_apps_description).
+# SVG-ul numără de la 0 ca banda de cifre a site-ului și arată numărul curent de module,
+# rotunjit la sute, din numărătoarea zilnică a site-ului: paginile nu se mai regenerează când
+# cifra crește. `alt` păstrează cifra din STAT_ITEMS când imaginea nu se încarcă.
+STAT_IMAGE = (
+    '<img src="%(image)s" width="140" height="44" alt="%(big)s" loading="lazy"'
+    ' style="display:block;margin:-4px auto;border:none;"/>'
+)
+APPS_COUNT_SVG = "https://www.terrabit.ro/theme_terrabit/apps-count.svg"
 # Date factuale despre autor (numărul de module publicate și întreținute pe Apps, nivelul
 # de parteneriat), nu promoții sau reclame în sensul vendor guidelines.
+# (cifra, cheia etichetei, imaginea care o înlocuiește sau None)
 STAT_ITEMS = [
-    ("800+", "stat_modules"),
-    ("Silver", "stat_partner"),
+    ("800+", "stat_modules", APPS_COUNT_SVG),
+    ("Silver", "stat_partner", None),
 ]
 
 # Delimitarea comercială: ce acoperă prețul de pe Apps Store și ce nu. Blocul stă
@@ -1529,7 +1541,11 @@ def build_stats(lang="en"):
         return ""
     strings = I18N[lang]
     col = max(3, 12 // max(1, len(STAT_ITEMS)))
-    cards = "\n  ".join(STAT_CARD % dict(TB, big=big, small=strings[key], col=col) for big, key in STAT_ITEMS)
+    cards = []
+    for big, key, image in STAT_ITEMS:
+        figure = (STAT_IMAGE % {"image": image, "big": big}) if image else (STAT_TEXT % dict(TB, big=big))
+        cards.append(STAT_CARD % dict(TB, figure=figure, small=strings[key], col=col))
+    cards = "\n  ".join(cards)
     return STATS % {"cards": cards}
 
 
