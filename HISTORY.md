@@ -1,5 +1,16 @@
 # Istoric
 
+## 1.18.0
+
+- `tb-gen-index`: în cardul de statistici, numărul de module publicate devine imaginea animată
+  `https://www.terrabit.ro/theme_terrabit/apps-count.svg` (140×44, `alt="800+"`, `loading="lazy"`).
+  Odoo Apps elimină iframe-urile și scripturile, dar păstrează imaginile externe: verificat pe
+  `deltatech_test_apps_description` (dhongu/test-apps-description), unde SVG-ul și GIF-ul de pe
+  terrabit.ro apar, iar SVG-ul inline, iframe-ul și scriptul sunt eliminate. Cifra numără de la 0
+  ca banda de cifre a site-ului și urmează numărătoarea zilnică a modulelor de pe Apps (rotunjită
+  la sute), deci paginile nu se mai regenerează când trece de 900. Cardul „Silver” rămâne text.
+  `STAT_ITEMS` primește a treia valoare: imaginea care înlocuiește cifra (sau `None`).
+
 ## 1.17.0
 
 - `tb-gen-index` și `tb-gen-docs`: cardul cu numărul de module publicate de Terrabit și textul
