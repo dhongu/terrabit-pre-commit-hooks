@@ -34,8 +34,11 @@ XML (QWeb):
 Exceptie pe linia constatarii sau pe linia de deasupra, cu motiv obligatoriu:
 
     body = Markup(f"<b>{n}</b>")  # xss-ok: n este int
-    // xss-ok: html vine din DOMPurify.sanitize
+    // Checked, xss-ok: html vine din DOMPurify.sanitize
     <!-- xss-ok: sursa e un camp sanitizat -->
+
+Marcajul nu tine cont de majuscule (`Xss-ok:` trece). In JS se scrie `// Checked, xss-ok: <motiv>`,
+forma pe care ESLint `capitalized-comments --fix` nu o modifica.
 
 `xss-ok` fara motiv nu ascunde constatarea (XSS-OK-00). Fisierele din `tests/`, `static/lib/` si
 `migrations/` nu se verifica. Iese cu 1 la erori; avertismentele (t-raw) nu opresc commit-ul, iar
@@ -111,8 +114,9 @@ REGULI = {
 }
 
 EXCLUSE = ("tests", "migrations")
-# Motivul: textul de dupa `xss-ok:`, pana la `-->` / `*/` sau capatul liniei.
-RE_EXCEPTIE = re.compile(r"xss-ok\b(?:\s*:((?:(?!-->|\*/).)*))?")
+# Motivul: textul de dupa `xss-ok:`, pana la `-->` / `*/` sau capatul liniei. Fara diferenta intre
+# majuscule si minuscule: ESLint `capitalized-comments --fix` face din `// xss-ok:` `// Xss-ok:`.
+RE_EXCEPTIE = re.compile(r"xss-ok\b(?:\s*:((?:(?!-->|\*/).)*))?", re.IGNORECASE)
 
 
 class Constatare:

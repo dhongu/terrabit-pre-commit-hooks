@@ -1,5 +1,11 @@
 # Istoric
 
+## 1.16.1
+
+- `check-xss-patterns`: marcajul `xss-ok` se recunoaște fără diferență între majuscule și minuscule,
+  ca `// Xss-ok: <motiv>` (forma produsă de ESLint `capitalized-comments --fix`) să treacă. Marcajul
+  fără motiv rămâne eroare (XSS-OK-00). În JS, forma recomandată e `// Checked, xss-ok: <motiv>`.
+
 ## 1.16.0
 
 - Hook nou `check-xss-patterns`: oprește tiparele XSS găsite la auditul după CVE-2026-130029
